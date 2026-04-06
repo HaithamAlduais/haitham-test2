@@ -1,0 +1,165 @@
+rules_version = '2';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Ramsha — Firestore Security Rules
+// Two-role model: Provider (creates/manages sessions)
+//                 Participant (attends sessions, records attendance)
+// ──────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+
+    // Returns the role string from the authenticated user's /users document.
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isProvider() {
+      return isSignedIn() && getUserRole() == 'Provider';
+    }
+
+    function isParticipant() {
+      return isSignedIn() && getUserRole() == 'Participant';
+    }
+
+    // ── users collection ──────────────────────────────────────────────────────
+    // Users can read their own profile. Writes are handled at signup.
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update, delete: if false;
+    }
+
+    // ── events collection ────────────────────────────────────────────────────
+    // Providers can CRUD their own events (ownerUid must match their UID).
+    // No direct client access for Participants.
+    match /events/{eventId} {
+      allow read: if isProvider()
+        && resource.data.ownerUid == request.auth.uid;
+
+      allow create: if isProvider()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.eventCode is string
+        && request.resource.data.eventCode.size() > 0
+        && (
+          !request.resource.data.keys().hasAny(['eventType'])
+          || request.resource.data.eventType in ['other', 'workshop', 'seminar', 'training', 'conference']
+        )
+        && (
+          !request.resource.data.keys().hasAny(['workshopData'])
+          || request.resource.data.workshopData is map
+        )
+        && (
+          !request.resource.data.keys().hasAny(['seminarData'])
+          || request.resource.data.seminarData is map
+        )
+        && (
+          !request.resource.data.keys().hasAny(['trainingData'])
+          || request.resource.data.trainingData is map
+        )
+        && (
+          !request.resource.data.keys().hasAny(['conferenceData'])
+          || request.resource.data.conferenceData is map
+        );
+
+      allow update: if isProvider()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.eventCode == resource.data.eventCode
+        && (
+          !request.resource.data.keys().hasAny(['eventType'])
+          || request.resource.data.eventType in ['other', 'workshop', 'seminar', 'training', 'conference']
+        )
+        && (
+          !request.resource.data.keys().hasAny(['workshopData'])
+          || request.resource.data.workshopData is map
+        )
+        && (
+          !request.resource.data.keys().hasAny(['seminarData'])
+          || request.resource.data.seminarData is map
+        )
+        && (
+          !request.resource.data.keys().hasAny(['trainingData'])
+          || request.resource.data.trainingData is map
+        )
+        && (
+          !request.resource.data.keys().hasAny(['conferenceData'])
+          || request.resource.data.conferenceData is map
+        );
+
+      allow delete: if isProvider()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ── sessions collection ───────────────────────────────────────────────────
+    // Providers can CRUD their own sessions (ownerUid must match their UID).
+    // Participants can read active sessions so they can join them.
+    match /sessions/{sessionId} {
+
+      // Providers can read any of their own sessions (any status).
+      // Participants can read sessions that are currently active.
+      allow read: if isSignedIn() && (
+        (isProvider() && resource.data.ownerUid == request.auth.uid) ||
+        (isParticipant() && resource.data.status == 'active')
+      );
+
+      // Only Providers can create sessions, and ownerUid must be their own UID.
+      allow create: if isProvider()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.sessionType in ['qr_code', 'f2f']
+        && request.resource.data.status in ['draft', 'active', 'closed'];
+
+      // Only the owning Provider can update their session.
+      allow update: if isProvider()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status in ['draft', 'active', 'closed'];
+
+      // Only the owning Provider can delete their session.
+      allow delete: if isProvider()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ── attendance_records collection ─────────────────────────────────────────
+    // Participants can create one attendance record per session (no edits/deletes).
+    // Providers can read attendance records for sessions they own.
+    match /attendance_records/{recordId} {
+
+      // Providers can read attendance records for their own sessions.
+      // Participants can read their own attendance records.
+      allow read: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/sessions/$(resource.data.sessionId)).data.ownerUid == request.auth.uid) ||
+        (isParticipant() && resource.data.participantUid == request.auth.uid)
+      );
+
+      // Participants can create an attendance record if:
+      //   1. They are a Participant.
+      //   2. The participantUid matches their own UID.
+      //   3. The target session exists and is currently active.
+      //   4. No duplicate check at rules level — enforced via application-layer
+      //      query before write (Firestore rules cannot query for uniqueness
+      //      across documents; use hasExistingAttendance() in the client).
+      allow create: if isParticipant()
+        && request.resource.data.participantUid == request.auth.uid
+        && request.resource.data.sessionId is string
+        && request.resource.data.participantName is string
+        && request.resource.data.participantEmail is string
+        && request.resource.data.status in ['present', 'late', 'absent']
+        && exists(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId))
+        && get(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)).data.status == 'active';
+
+      // Attendance records are immutable once created — no updates or deletes.
+      allow update, delete: if false;
+    }
+  }
+}

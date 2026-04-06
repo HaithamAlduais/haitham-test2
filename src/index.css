@@ -1,0 +1,253 @@
+/* Typography: IBM Plex Serif (default) + IBM Plex Sans Arabic (arabic locales). */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -------------------------------------------------------------------------- */
+/* Design tokens: light / dark + density preset (`data-theme-preset` on html) */
+/* -------------------------------------------------------------------------- */
+
+@layer base {
+  :root {
+    --neo-dir-sign: 1;
+
+    /* Default light: white / neutral (formerly landing-only palette) */
+    --background: oklch(99.2% 0.003 260);
+    --secondary-background: oklch(100% 0 0);
+    --foreground: oklch(0% 0 0);
+    --main-foreground: oklch(0% 0 0);
+    --main: oklch(50% 0.14 264);
+    --border: oklch(0% 0 0);
+    --ring: oklch(0% 0 0);
+    --overlay: oklch(0% 0 0 / 0.8);
+    --chart-1: #6366f1;
+    --chart-2: #7a83ff;
+    --chart-3: #f59e0b;
+    --chart-4: #ef4444;
+    --chart-5: #0ea5e9;
+    --chart-active-dot: #000;
+
+    --panel-blue: oklch(91% 0.02 260);
+    --card: var(--secondary-background);
+    --card-foreground: var(--foreground);
+    --popover: var(--secondary-background);
+    --popover-foreground: var(--foreground);
+    --primary: var(--main);
+    --primary-foreground: var(--main-foreground);
+    --secondary: oklch(96% 0.006 260);
+    --secondary-foreground: var(--foreground);
+    --accent: oklch(94% 0.008 260);
+    --accent-foreground: var(--foreground);
+    --muted: oklch(93% 0.008 260);
+    --muted-foreground: oklch(42% 0.02 260);
+    --destructive: oklch(55% 0.2 25);
+    --destructive-foreground: oklch(100% 0 0);
+    --input: var(--secondary-background);
+
+    /* Compact preset: 10px radius, 2px neo shadow */
+    --radius: 10px;
+    --neo-h-mag: 2px;
+    --neo-v-mag: 2px;
+    --neo-h-sm-mag: 1px;
+    --neo-v-sm-mag: 1px;
+    --neo-h-lg-mag: 3px;
+    --neo-v-lg-mag: 3px;
+    --neo-h-xl-mag: 4px;
+    --neo-v-xl-mag: 4px;
+
+    --neo-h: calc(var(--neo-dir-sign) * var(--neo-h-mag));
+    --neo-v: var(--neo-v-mag);
+    --neo-h-sm: calc(var(--neo-dir-sign) * var(--neo-h-sm-mag));
+    --neo-v-sm: var(--neo-v-sm-mag);
+    --neo-h-lg: calc(var(--neo-dir-sign) * var(--neo-h-lg-mag));
+    --neo-v-lg: var(--neo-v-lg-mag);
+    --neo-h-xl: calc(var(--neo-dir-sign) * var(--neo-h-xl-mag));
+    --neo-v-xl: var(--neo-v-xl-mag);
+    --neo-shadow: var(--neo-h) var(--neo-v) 0 0 var(--border);
+    --neo-shadow-sm: var(--neo-h-sm) var(--neo-v-sm) 0 0 var(--border);
+    --neo-shadow-lg: var(--neo-h-lg) var(--neo-v-lg) 0 0 var(--border);
+    --neo-shadow-xl: var(--neo-h-xl) var(--neo-v-xl) 0 0 var(--border);
+    --neo-border: 2px solid var(--border);
+    /* After --neo-shadow: follows RTL via --neo-h */
+    --shadow: var(--neo-shadow);
+
+    /* Ramsha legacy tokens */
+    --bg-base:        #F5F0E8;
+    --bg-surface:     #EAE4D9;
+    --bg-card:        #DDD7CB;
+    --text-primary:   #0A0A0A;
+    --text-secondary: #6B6560;
+    --shadow-card:    3px 3px 0px #B5AFA6;
+    --grid-color:     rgba(200, 195, 187, 0.3);
+  }
+
+  html[data-theme-preset="bold"] {
+    --radius: 5px;
+    --neo-h-mag: 4px;
+    --neo-v-mag: 4px;
+    --neo-h-sm-mag: 2px;
+    --neo-v-sm-mag: 2px;
+    --neo-h-lg-mag: 6px;
+    --neo-v-lg-mag: 6px;
+    --neo-h-xl-mag: 8px;
+    --neo-v-xl-mag: 8px;
+  }
+
+  .dark {
+    --background: oklch(16% 0.012 260);
+    --secondary-background: oklch(20% 0.012 260);
+    --foreground: oklch(92.49% 0 0);
+    --main-foreground: oklch(0% 0 0);
+    --main: oklch(68% 0.14 264);
+    --border: oklch(0% 0 0);
+    --ring: oklch(100% 0 0);
+    --overlay: oklch(0% 0 0 / 0.8);
+    /* Uses --neo-h so RTL (html[dir="rtl"] --neo-dir-sign: -1) casts shadow left */
+    --shadow: var(--neo-shadow);
+    --chart-1: #818cf8;
+    --chart-2: #7a83ff;
+    --chart-3: #fbbf24;
+    --chart-4: #f87171;
+    --chart-5: #38bdf8;
+    --chart-active-dot: #fff;
+
+    --panel-blue: oklch(28% 0.04 260);
+    --card: var(--secondary-background);
+    --card-foreground: var(--foreground);
+    --popover: var(--secondary-background);
+    --popover-foreground: var(--foreground);
+    --primary: var(--main);
+    --primary-foreground: var(--main-foreground);
+    --secondary: oklch(24% 0.015 260);
+    --secondary-foreground: var(--foreground);
+    --accent: oklch(26% 0.02 260);
+    --accent-foreground: var(--foreground);
+    --muted: oklch(26% 0.02 260);
+    --muted-foreground: oklch(72% 0.02 260);
+    --destructive: oklch(60% 0.18 25);
+    --destructive-foreground: oklch(100% 0 0);
+    --input: var(--secondary-background);
+
+    /* Ramsha legacy tokens for dark mode */
+    --bg-base:        #0A0A0A;
+    --bg-surface:     #1C1F26;
+    --bg-card:        #2E3440;
+    --text-primary:   #F0EFE9;
+    --text-secondary: #A8B0BC;
+    --shadow-card:    3px 3px 0px #3A3F4B;
+    --grid-color:     rgba(58, 63, 75, 0.25);
+  }
+
+  html[dir="rtl"] {
+    --neo-dir-sign: -1;
+  }
+
+  html {
+    min-height: 100%;
+    background-color: var(--background);
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html:not(.dark) {
+    color-scheme: light;
+  }
+
+  body {
+    min-height: 100%;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: "IBM Plex Serif", Georgia, ui-serif, "Times New Roman", serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.lang-ar body {
+    font-family: "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  }
+
+  html.lang-ar h1,
+  html.lang-ar h2,
+  html.lang-ar h3,
+  html.lang-ar h4,
+  html.lang-ar h5,
+  html.lang-ar h6 {
+    font-family: "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "IBM Plex Serif", Georgia, ui-serif, "Times New Roman", serif;
+  }
+}
+
+@layer utilities {
+  .outline-hidden {
+    outline: none;
+  }
+}
+
+/* Single-track seamless loop: two copies inside one row, shift by half width */
+@keyframes marquee2 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-marquee2 {
+  animation: marquee2 28s linear infinite;
+}
+
+.animate-caret-blink {
+  animation: caret-blink 1s step-end infinite;
+}
+
+/* ── Legacy Ramsha Background Grid Pattern ──────────────────────────── */
+
+.bg-grid {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Legacy Ramsha styles */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+a {
+  font-weight: 500;
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #4338ca;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select {
+  font-family: inherit;
+}

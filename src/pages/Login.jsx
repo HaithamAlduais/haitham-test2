@@ -231,9 +231,7 @@ const Login = () => {
         <div className="flex min-h-screen items-center justify-center px-4" dir={dir}>
           <div className="w-full max-w-md rounded-2xl border-2 border-border bg-secondary-background p-8 shadow-shadow">
             <div className="mb-6 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-border bg-main shadow-neo-sm">
-                <Zap className="h-4 w-4 text-main-foreground" strokeWidth={3} />
-              </div>
+              <img src="/ramsha-logo-black.jpg" alt="Ramsha" className="h-9 w-9 object-contain dark:invert" />
               <span className="text-lg font-black tracking-tight text-foreground">ramsha</span>
             </div>
 

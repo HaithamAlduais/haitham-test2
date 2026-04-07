@@ -4,6 +4,9 @@ on:
   push:
     branches: [haitham-test2, main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -12,27 +15,26 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      # Install frontend dependencies and build
+      # Install frontend deps and build
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: AIzaSyAF-5o1Fy98yLsjCvUIZUAGrSN8gh7OJjw
+          VITE_FIREBASE_AUTH_DOMAIN: ramsha-cd619.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: ramsha-cd619
+          VITE_FIREBASE_STORAGE_BUCKET: ramsha-cd619.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "205187964065"
+          VITE_FIREBASE_APP_ID: "1:205187964065:web:200d8fd10a42be4fa0a4e0"
+          VITE_FIREBASE_MEASUREMENT_ID: G-98RDL2W8W8
+          VITE_GEMINI_API_KEY: AIzaSyCO6yfgolnaF-KjCQKLLceVjasGgp0dtA8
+          VITE_SKIP_EMAIL_VERIFICATION: "true"
+          VITE_API_URL: ""
 
-      # Install server dependencies
-      - run: cd server && npm ci
-
-      # Install functions dependencies
+      # Install function deps
       - run: cd functions && npm ci
 
-      # Deploy to Firebase (hosting + functions)
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: ramsha-cd619
-
-      # Deploy Cloud Functions
-      - name: Deploy Functions
-        run: npx firebase-tools deploy --only functions --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
+      # Deploy hosting + functions
+      - run: npx firebase-tools deploy --only hosting,functions --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive --force

@@ -13,6 +13,8 @@ const registrationRoutes = require("./registrations");
 const teamRoutes = require("./teams");
 const submissionRoutes = require("./submissions");
 const judgingRoutes = require("./judging");
+const announcementRoutes = require("./announcements");
+const workshopRoutes = require("./workshops");
 
 const router = express.Router();
 
@@ -32,5 +34,7 @@ router.use("/:id/registrations", registrationRoutes);
 router.use("/:id/teams", teamRoutes);
 router.use("/:id/submissions", submissionRoutes);
 router.use("/:id", judgingRoutes);
+router.use("/:id/announcements", announcementRoutes);
+router.use("/:id/workshops", workshopRoutes);
 
 module.exports = router;

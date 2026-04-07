@@ -47,7 +47,7 @@ export function LandingHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const { lang, setLang, t, dir } = useLanguage();
-  const { setMode, setTheme } = useTheme();
+  const { setMode, setTheme, isOrganizer } = useTheme();
   const L = getLandingCopy(lang);
   const sheetSide = dir === "rtl" ? "left" : "right";
   const isOrganizerPage = location.pathname === "/organizer";
@@ -59,16 +59,11 @@ export function LandingHeader() {
   });
 
   const onAudienceSwitch = (toOrganizer) => {
-    // Force theme change FIRST, then navigate
-    if (toOrganizer) {
-      setTheme("dark");
-      setMode("organizer");
-      navigate("/organizer");
-    } else {
-      setTheme("light");
-      setMode("participant");
-      navigate("/");
-    }
+    // Set state FIRST so switch updates visually, then navigate
+    setMode(toOrganizer ? "organizer" : "participant");
+    setTheme(toOrganizer ? "dark" : "light");
+    // Small delay so React re-renders the switch before route change unmounts it
+    setTimeout(() => navigate(toOrganizer ? "/organizer" : "/"), 50);
   };
 
   const docked = useLandingHeaderDocked(32);
@@ -121,7 +116,7 @@ export function LandingHeader() {
             </span>
             <Switch
               aria-label={t("nav.audienceSwitch")}
-              checked={isOrganizerPage}
+              checked={isOrganizer}
               onCheckedChange={(checked) => onAudienceSwitch(checked)}
             />
             <span className="text-xs font-semibold text-muted-foreground">
@@ -190,7 +185,7 @@ export function LandingHeader() {
                     <span className="text-xs font-bold text-foreground">{t("nav.participant")}</span>
                     <Switch
                       aria-label={t("nav.audienceSwitch")}
-                      checked={isOrganizerPage}
+                      checked={isOrganizer}
                       onCheckedChange={(checked) => {
                         if (checked !== isOrganizerPage) onAudienceSwitch(checked);
                       }}

@@ -1,20 +1,15 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+/**
+ * Ramsha — Upload Controller (Firebase Storage)
+ *
+ * Handles file uploads using Firebase Storage (replaces Cloudflare R2).
+ * Uses Firebase Admin SDK to generate signed URLs for direct upload.
+ */
 
-// Initialize S3 client for Cloudflare R2
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_ENDPOINT = process.env.R2_ENDPOINT;
-const R2_BUCKET = process.env.R2_BUCKET;
+const admin = require("firebase-admin");
 
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: R2_ENDPOINT,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
-  },
-});
+function getBucket() {
+  return admin.storage().bucket();
+}
 
 exports.generatePresignedUrl = async (req, res) => {
   try {
@@ -23,31 +18,33 @@ exports.generatePresignedUrl = async (req, res) => {
       return res.status(400).json({ error: "fileName is required" });
     }
 
-    const key = `${fileType}/${fileId}/${Date.now()}_${fileName}`;
+    const key = `${fileType || "uploads"}/${fileId || "general"}/${Date.now()}_${fileName}`;
+    const bucket = getBucket();
+    const file = bucket.file(key);
 
-    const command = new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: key,
-      ContentType: contentType,
-      ContentDisposition: `attachment; filename="${fileName}"`,
+    // Generate a signed URL for uploading (PUT)
+    const [uploadUrl] = await file.getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 60 * 60 * 1000, // 1 hour
+      contentType: contentType || "application/octet-stream",
     });
 
-    const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-    
-    // Also build the public URL according to environment var R2_URL if present
-    const publicUrlBase = process.env.R2_URL || R2_ENDPOINT;
-    const downloadURL = process.env.R2_URL 
-      ? `${publicUrlBase}/${key}` 
-      : `${R2_ENDPOINT}/${R2_BUCKET}/${key}`;
+    // Generate a signed URL for reading (GET) — long-lived for public access
+    const [downloadURL] = await file.getSignedUrl({
+      version: "v4",
+      action: "read",
+      expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+    });
 
     res.json({
-      uploadUrl: url,
-      downloadURL: downloadURL,
-      storagePath: key
+      uploadUrl,
+      downloadURL,
+      storagePath: key,
     });
   } catch (error) {
-    console.error("Error generating presigned URL:", error);
-    res.status(500).json({ error: "Failed to generate presigned URL" });
+    console.error("Error generating upload URL:", error);
+    res.status(500).json({ error: "Failed to generate upload URL" });
   }
 };
 
@@ -58,12 +55,8 @@ exports.deleteFile = async (req, res) => {
       return res.status(400).json({ error: "storagePath is required" });
     }
 
-    const command = new DeleteObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: storagePath,
-    });
-
-    await s3Client.send(command);
+    const bucket = getBucket();
+    await bucket.file(storagePath).delete();
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting file:", error);

@@ -13,11 +13,16 @@ if (!admin.apps.length) {
     const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
       || path.join(__dirname, 'serviceAccountKey.json');
     const serviceAccount = require(serviceAccountPath);
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      storageBucket: `${serviceAccount.project_id}.firebasestorage.app`,
+    });
     console.log(`Firebase Admin initialized for project: ${serviceAccount.project_id}`);
   } catch {
     // In Cloud Functions / production — use Application Default Credentials
-    admin.initializeApp();
+    admin.initializeApp({
+      storageBucket: 'ramsha-cd619.firebasestorage.app',
+    });
     console.log('Firebase Admin initialized with default credentials');
   }
 }

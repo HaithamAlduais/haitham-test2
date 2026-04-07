@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,21 +16,18 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore
+// Initialize services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Ramsha — actionCodeSettings for email verification links.
-// The verification email will redirect the user to /email-verified
-// where the oobCode is applied to complete verification.
 export const actionCodeSettings = {
   url: `${window.location.origin}/email-verified`,
   handleCodeInApp: true,
 };
 
 // Ramsha — actionCodeSettings for password reset links.
-// The reset email will redirect the user to /reset-password
-// where the oobCode is used to confirm the new password.
 export const passwordResetActionCodeSettings = {
   url: `${window.location.origin}/reset-password`,
   handleCodeInApp: true,

@@ -230,7 +230,7 @@ Ramsha-main/
 | File | Purpose |
 |------|---------|
 | `package.json` | Frontend monorepo. Scripts: `dev` runs Vite + Express concurrently, `build` produces dist/, `lint` runs ESLint |
-| `vite.config.js` | React plugin, `@` alias to `src/`, dev proxy `/api` → `http://localhost:5000` |
+| `vite.config.js` | React plugin, `@` alias to `src/`, dev proxy `/api` → `http://localhost:5001` |
 | `tailwind.config.js` | Dark mode via `class`, custom fonts (IBM Plex Serif), neo-shadow spacing, semantic color tokens from CSS variables, accordion/pulse animations |
 | `components.json` | shadcn/ui: `base-nova` style, no RSC, no TSX, Lucide icons, neutral base color |
 | `firebase.json` | Predeploy script copies server to functions. Emulators: functions on port 5000 |

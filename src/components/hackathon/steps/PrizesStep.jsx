@@ -1,98 +1,202 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Trophy } from "lucide-react";
+import { Plus, Trash2, Trophy, Award, Star, Users, Heart } from "lucide-react";
+
+const CATEGORIES = [
+  { value: "overall", label: "Overall", icon: Trophy, color: "text-yellow-500" },
+  { value: "per_track", label: "Per Track", icon: Award, color: "text-blue-500" },
+  { value: "special", label: "Special Award", icon: Star, color: "text-purple-500" },
+  { value: "sponsor", label: "Sponsor Prize", icon: Users, color: "text-green-500" },
+  { value: "popular_choice", label: "Popular Choice", icon: Heart, color: "text-red-500" },
+];
+
+const TYPES = [
+  { value: "cash", label: "Cash" },
+  { value: "credits", label: "Credits / Subscription" },
+  { value: "access", label: "Exclusive Access" },
+  { value: "badges", label: "Digital Badge" },
+  { value: "physical", label: "Physical Prize" },
+];
+
+const EMPTY_PRIZE = {
+  place: "", title: "", description: "", value: "",
+  category: "overall", type: "cash", trackId: "", sponsorName: "",
+};
 
 export default function PrizesStep({ data, onChange, onNext, onBack }) {
   const prizes = data.prizes || [];
-  const [newPrize, setNewPrize] = useState({ place: "", title: "", description: "", value: "" });
+  const tracks = data.tracks || [];
+  const sponsors = data.sponsors || [];
+  const [newPrize, setNewPrize] = useState(EMPTY_PRIZE);
 
   const addPrize = () => {
     if (!newPrize.title.trim()) return;
-    onChange({ prizes: [...prizes, { ...newPrize, id: crypto.randomUUID() }] });
-    setNewPrize({ place: "", title: "", description: "", value: "" });
+    onChange({
+      prizes: [...prizes, {
+        ...newPrize,
+        id: crypto.randomUUID(),
+        fulfillment: "pending",
+        awardedTo: null,
+      }],
+    });
+    setNewPrize(EMPTY_PRIZE);
   };
 
   const removePrize = (idx) => {
     onChange({ prizes: prizes.filter((_, i) => i !== idx) });
   };
 
+  const getCatInfo = (cat) => CATEGORIES.find((c) => c.value === cat) || CATEGORIES[0];
+
+  // Group prizes by category for display
+  const grouped = CATEGORIES.map((cat) => ({
+    ...cat,
+    items: prizes.filter((p) => p.category === cat.value),
+  })).filter((g) => g.items.length > 0);
+
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Prizes</h2>
+        <h2 className="text-2xl font-black text-foreground">Prizes & Awards</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Define prizes and awards for winners. This is optional.
+          Define prizes across multiple categories: overall winners, per-track awards, special recognition, sponsor prizes, and popular choice.
         </p>
       </div>
 
-      {prizes.length > 0 && (
-        <div className="space-y-3">
-          {prizes.map((prize, idx) => (
-            <div
-              key={prize.id || idx}
-              className="flex items-start gap-3 rounded-base border-2 border-border bg-card p-4"
-            >
-              <Trophy className="h-5 w-5 shrink-0 text-main mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground">
-                  {prize.place && `${prize.place} — `}{prize.title}
-                </p>
-                {prize.value && (
-                  <p className="text-sm text-main font-bold">{prize.value}</p>
-                )}
-                {prize.description && (
-                  <p className="mt-1 text-sm text-muted-foreground">{prize.description}</p>
-                )}
+      {/* Existing prizes grouped by category */}
+      {grouped.length > 0 && (
+        <div className="space-y-5">
+          {grouped.map((group) => (
+            <div key={group.value}>
+              <div className="flex items-center gap-2 mb-2">
+                <group.icon className={`h-4 w-4 ${group.color}`} />
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">{group.label}</h3>
+                <span className="text-xs text-muted-foreground">({group.items.length})</span>
               </div>
-              <button
-                onClick={() => removePrize(idx)}
-                className="shrink-0 text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="space-y-2">
+                {group.items.map((prize) => {
+                  const globalIdx = prizes.indexOf(prize);
+                  return (
+                    <div
+                      key={prize.id || globalIdx}
+                      className="flex items-start gap-3 rounded-base border-2 border-border bg-card p-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-foreground text-sm">
+                          {prize.place && <span className="text-main">{prize.place} — </span>}
+                          {prize.title}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {prize.value && (
+                            <span className="inline-flex items-center rounded-base border border-border bg-main/10 px-2 py-0.5 text-xs font-bold text-main">
+                              {prize.value}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center rounded-base border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                            {TYPES.find((t) => t.value === prize.type)?.label || prize.type}
+                          </span>
+                          {prize.trackId && (
+                            <span className="inline-flex items-center rounded-base border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                              Track: {tracks.find((t) => t.id === prize.trackId)?.name || prize.trackId}
+                            </span>
+                          )}
+                          {prize.sponsorName && (
+                            <span className="inline-flex items-center rounded-base border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                              Sponsor: {prize.sponsorName}
+                            </span>
+                          )}
+                        </div>
+                        {prize.description && (
+                          <p className="mt-1 text-xs text-muted-foreground">{prize.description}</p>
+                        )}
+                      </div>
+                      <button onClick={() => removePrize(globalIdx)} className="shrink-0 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
+      {/* Add new prize form */}
+      <div className="rounded-base border-2 border-dashed border-border p-4 space-y-4">
+        <p className="text-sm font-bold text-foreground">Add a Prize</p>
+
+        {/* Category selector */}
+        <div className="flex flex-wrap gap-2">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setNewPrize({ ...newPrize, category: cat.value })}
+              className={`flex items-center gap-1.5 rounded-base border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
+                newPrize.category === cat.value
+                  ? "bg-main text-main-foreground border-border shadow-neo-sm"
+                  : "bg-card text-muted-foreground border-border hover:bg-muted"
+              }`}
+            >
+              <cat.icon className="h-3.5 w-3.5" />
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label>Place (e.g. 1st, 2nd)</Label>
-            <Input
-              value={newPrize.place}
-              onChange={(e) => setNewPrize({ ...newPrize, place: e.target.value })}
-              placeholder="1st Place"
-            />
+            <Label>Place</Label>
+            <Input value={newPrize.place} onChange={(e) => setNewPrize({ ...newPrize, place: e.target.value })} placeholder="1st Place" />
           </div>
           <div className="space-y-1">
-            <Label>Prize Title *</Label>
-            <Input
-              value={newPrize.title}
-              onChange={(e) => setNewPrize({ ...newPrize, title: e.target.value })}
-              placeholder="Grand Prize"
-            />
+            <Label>Title *</Label>
+            <Input value={newPrize.title} onChange={(e) => setNewPrize({ ...newPrize, title: e.target.value })} placeholder="Grand Prize" />
           </div>
           <div className="space-y-1">
             <Label>Value</Label>
-            <Input
-              value={newPrize.value}
-              onChange={(e) => setNewPrize({ ...newPrize, value: e.target.value })}
-              placeholder="$5,000 or Gift Cards"
-            />
+            <Input value={newPrize.value} onChange={(e) => setNewPrize({ ...newPrize, value: e.target.value })} placeholder="$5,000" />
           </div>
           <div className="space-y-1">
+            <Label>Prize Type</Label>
+            <select
+              value={newPrize.type}
+              onChange={(e) => setNewPrize({ ...newPrize, type: e.target.value })}
+              className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm font-medium"
+            >
+              {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+
+          {newPrize.category === "per_track" && tracks.length > 0 && (
+            <div className="space-y-1 sm:col-span-2">
+              <Label>Track</Label>
+              <select
+                value={newPrize.trackId}
+                onChange={(e) => setNewPrize({ ...newPrize, trackId: e.target.value })}
+                className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm font-medium"
+              >
+                <option value="">Select track...</option>
+                {tracks.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {newPrize.category === "sponsor" && (
+            <div className="space-y-1 sm:col-span-2">
+              <Label>Sponsor Name</Label>
+              <Input value={newPrize.sponsorName} onChange={(e) => setNewPrize({ ...newPrize, sponsorName: e.target.value })} placeholder="Sponsor company name" />
+            </div>
+          )}
+
+          <div className="space-y-1 sm:col-span-2">
             <Label>Description</Label>
-            <Input
-              value={newPrize.description}
-              onChange={(e) => setNewPrize({ ...newPrize, description: e.target.value })}
-              placeholder="Brief description of the prize"
-            />
+            <Input value={newPrize.description} onChange={(e) => setNewPrize({ ...newPrize, description: e.target.value })} placeholder="Brief description" />
           </div>
         </div>
+
         <Button variant="neutral" size="sm" onClick={addPrize} disabled={!newPrize.title.trim()}>
           <Plus className="h-4 w-4" /> Add Prize
         </Button>

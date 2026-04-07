@@ -221,5 +221,135 @@ service cloud.firestore {
         && request.resource.data.participantUid == request.auth.uid;
       allow update, delete: if false;
     }
+
+    // ── hackathons collection ────────────────────────────────────────────────
+    // Providers (organizers) can CRUD their own hackathons.
+    // Public hackathons are readable by any signed-in user.
+    match /hackathons/{hackathonId} {
+
+      // Organizers can read their own hackathons (any status).
+      // Any signed-in user can read public hackathons.
+      allow read: if isSignedIn() && (
+        resource.data.organizerId == request.auth.uid ||
+        resource.data.isPublic == true
+      );
+
+      // Only Providers can create hackathons.
+      allow create: if isProvider()
+        && request.resource.data.organizerId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['draft', 'published', 'active', 'judging', 'completed', 'archived'];
+
+      // Only the owning organizer can update their hackathon.
+      allow update: if isProvider()
+        && resource.data.organizerId == request.auth.uid
+        && request.resource.data.organizerId == request.auth.uid;
+
+      // Only the owning organizer can delete their hackathon.
+      allow delete: if isProvider()
+        && resource.data.organizerId == request.auth.uid;
+    }
+
+    // ── registrations collection (top-level) ─────────────────────────────────
+    // Participants register for hackathons. Organizers manage registrations.
+    match /registrations/{registrationId} {
+
+      // Organizers can read registrations for their hackathons.
+      // Participants can read their own registrations.
+      allow read: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        (resource.data.participantUid == request.auth.uid)
+      );
+
+      // Participants can create a registration.
+      allow create: if isParticipant()
+        && request.resource.data.participantUid == request.auth.uid
+        && request.resource.data.hackathonId is string
+        && request.resource.data.status in ['pending', 'approved', 'rejected', 'waitlisted'];
+
+      // Organizers can update registration status (approve/reject).
+      // Participants can update their own registration details.
+      allow update: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        (isParticipant() && resource.data.participantUid == request.auth.uid)
+      );
+
+      allow delete: if false;
+    }
+
+    // ── teams collection (top-level) ─────────────────────────────────────────
+    // Teams participate in hackathons.
+    match /teams/{teamId} {
+
+      // Organizers and team members can read the team.
+      allow read: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        (request.auth.uid in resource.data.memberUids)
+      );
+
+      // Any signed-in user can create a team.
+      allow create: if isSignedIn()
+        && request.resource.data.hackathonId is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.auth.uid in request.resource.data.memberUids;
+
+      // Team members and organizers can update.
+      allow update: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        (request.auth.uid in resource.data.memberUids)
+      );
+
+      allow delete: if isProvider()
+        && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid;
+    }
+
+    // ── submissions collection (top-level) ───────────────────────────────────
+    // Teams submit projects for judging.
+    match /submissions/{submissionId} {
+
+      // Organizers, judges, and submitting team members can read.
+      allow read: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        (request.auth.uid in get(/databases/$(database)/documents/teams/$(resource.data.teamId)).data.memberUids)
+      );
+
+      // Team members can create a submission.
+      allow create: if isSignedIn()
+        && request.resource.data.hackathonId is string
+        && request.resource.data.teamId is string;
+
+      // Team members or organizer can update.
+      allow update: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        (request.auth.uid in get(/databases/$(database)/documents/teams/$(resource.data.teamId)).data.memberUids)
+      );
+
+      allow delete: if false;
+    }
+
+    // ── scores collection (top-level) ────────────────────────────────────────
+    // Judges score submissions. Organizers can read all scores.
+    match /scores/{scoreId} {
+
+      // Organizers and the scoring judge can read.
+      allow read: if isSignedIn() && (
+        (isProvider() && get(/databases/$(database)/documents/hackathons/$(resource.data.hackathonId)).data.organizerId == request.auth.uid) ||
+        resource.data.judgeUid == request.auth.uid
+      );
+
+      // Judges (Providers) can create scores.
+      allow create: if isProvider()
+        && request.resource.data.judgeUid == request.auth.uid
+        && request.resource.data.hackathonId is string
+        && request.resource.data.submissionId is string;
+
+      // Judges can update their own scores.
+      allow update: if isProvider()
+        && resource.data.judgeUid == request.auth.uid;
+
+      allow delete: if false;
+    }
   }
 }

@@ -49,7 +49,10 @@ const HACKATHON_STATUS = {
   ACTIVE: "active",
   JUDGING: "judging",
   COMPLETED: "completed",
+  ARCHIVED: "archived",
 };
+
+const ALLOWED_HACKATHON_STATUSES = Object.values(HACKATHON_STATUS);
 
 const REGISTRATION_STATUS = {
   PENDING: "pending",
@@ -73,6 +76,65 @@ const SUBMISSION_STATUS = {
   EVALUATED: "evaluated",
 };
 
+// ── Prizes ─────────────────────────────────────────────────────────────────
+const PRIZE_CATEGORY = {
+  OVERALL: "overall",
+  PER_TRACK: "per_track",
+  SPECIAL: "special",
+  SPONSOR: "sponsor",
+  POPULAR_CHOICE: "popular_choice",
+};
+
+const PRIZE_TYPE = {
+  CASH: "cash",
+  CREDITS: "credits",
+  ACCESS: "access",
+  BADGES: "badges",
+  PHYSICAL: "physical",
+};
+
+const PRIZE_FULFILLMENT = {
+  PENDING: "pending",
+  VERIFIED: "verified",
+  DELIVERED: "delivered",
+};
+
+// ── Team Roles ─────────────────────────────────────────────────────────────
+const TEAM_ROLES = {
+  CAPTAIN: "captain",
+  PM: "pm",
+  DEVELOPER: "developer",
+  DESIGNER: "designer",
+};
+
+const JOIN_REQUEST_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+};
+
+// ── Sponsor Tiers ──────────────────────────────────────────────────────────
+const SPONSOR_TIER = {
+  PLATINUM: "platinum",
+  GOLD: "gold",
+  SILVER: "silver",
+  BRONZE: "bronze",
+  PARTNER: "partner",
+};
+
+// ── Firestore collection names ──────────────────────────────────────────────
+const COLLECTIONS = {
+  USERS: "users",
+  EVENTS: "events",
+  SESSIONS: "sessions",
+  ATTENDANCE_RECORDS: "attendance_records",
+  HACKATHONS: "hackathons",
+  REGISTRATIONS: "registrations",
+  TEAMS: "teams",
+  SUBMISSIONS: "submissions",
+  SCORES: "scores",
+};
+
 module.exports = {
   ROLES,
   LEGACY_ROLE_MAP,
@@ -83,7 +145,15 @@ module.exports = {
   ALLOWED_EVENT_TYPES,
   EVENT_CODE_PREFIX,
   HACKATHON_STATUS,
+  ALLOWED_HACKATHON_STATUSES,
   REGISTRATION_STATUS,
   TEAM_STATUS,
   SUBMISSION_STATUS,
+  PRIZE_CATEGORY,
+  PRIZE_TYPE,
+  PRIZE_FULFILLMENT,
+  TEAM_ROLES,
+  JOIN_REQUEST_STATUS,
+  SPONSOR_TIER,
+  COLLECTIONS,
 };

@@ -150,10 +150,31 @@ async function updateRegistrationStatus(req, res) {
       return res.status(403).json({ error: "You do not own this hackathon." });
     }
 
-    await registrationsCol(id).doc(regId).update({
+    const updatePayload = {
       status: newStatus,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    };
+
+    // If accepting, attach starter kit resources
+    if (newStatus === REGISTRATION_STATUS.ACCEPTED) {
+      try {
+        const resourcesSnap = await eventsCol().doc(id).collection("resources")
+          .where("autoSendOnAccept", "==", true).get();
+        if (!resourcesSnap.empty) {
+          updatePayload.starterKitResources = resourcesSnap.docs.map((d) => ({
+            id: d.id,
+            title: d.data().title,
+            type: d.data().type,
+            url: d.data().url,
+          }));
+        }
+      } catch (resourceErr) {
+        // Non-fatal — don't block acceptance if resources fail to load
+        console.warn("Could not attach starter kit resources:", resourceErr.message);
+      }
+    }
+
+    await registrationsCol(id).doc(regId).update(updatePayload);
 
     return res.json({ message: `Registration status updated to "${newStatus}".` });
   } catch (err) {

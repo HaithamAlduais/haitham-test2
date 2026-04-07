@@ -3,10 +3,14 @@ const requireRole = require("../middleware/requireRole");
 const {
   createTeam,
   joinTeam,
+  requestToJoin,
+  handleJoinRequest,
+  listJoinRequests,
   listTeams,
   getTeam,
   leaveTeam,
   listAllTeamsAdmin,
+  updateTeamTags,
 } = require("../controllers/teamController");
 
 const router = express.Router({ mergeParams: true });
@@ -18,7 +22,13 @@ router.get("/", requireRole("Participant", "Organizer"), listTeams);
 router.get("/:teamId", requireRole("Participant", "Organizer"), getTeam);
 router.post("/:teamId/leave", requireRole("Participant"), leaveTeam);
 
+// Join request endpoints
+router.post("/:teamId/request", requireRole("Participant"), requestToJoin);
+router.patch("/:teamId/request/:reqId", requireRole("Participant", "Organizer"), handleJoinRequest);
+router.get("/:teamId/requests", requireRole("Participant", "Organizer"), listJoinRequests);
+
 // Organizer endpoints
 router.get("/admin/all", requireRole("Organizer"), listAllTeamsAdmin);
+router.patch("/:teamId/tags", requireRole("Organizer"), updateTeamTags);
 
 module.exports = router;

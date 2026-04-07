@@ -8,6 +8,7 @@
 const { admin, db } = require("../lib/firebase");
 const { SESSION_STATUS, SESSION_TYPE, ATTENDANCE_STATUS } = require("../lib/constants");
 const { haversineDistance } = require("../utils/haversine");
+const { validateQrToken } = require("../utils/qrToken");
 
 // Lazy collection accessors
 const sessionsCol = () => db().collection("sessions");
@@ -65,14 +66,27 @@ async function attendSession(req, res) {
     const { participantName, participantEmail } = req.body;
 
     if (session.sessionType === SESSION_TYPE.QR_CODE) {
-      // QR Code path
-      const { qrCode } = req.body;
+      // QR Code path — supports rotating token (qrToken) or static code (qrCode)
+      const { qrCode, qrToken } = req.body;
 
-      if (qrCode !== session.qrCode) {
+      // Support rotating QR tokens (new) and static codes (legacy)
+      let qrValid = false;
+      if (session.qrSecret && qrToken) {
+        // Rotating token validation
+        const interval = session.qrRotationInterval || 120;
+        qrValid = validateQrToken(session.qrSecret, interval, qrToken);
+      } else {
+        // Legacy static code validation
+        qrValid = qrCode === session.qrCode;
+      }
+
+      if (!qrValid) {
         return res.status(400).json({
           success: false,
           code: "INVALID_QR_CODE",
-          message: "The QR code does not match this session.",
+          message: session.qrSecret
+            ? "QR code has expired or is invalid. Please scan the latest code."
+            : "The QR code does not match this session.",
         });
       }
     } else if (session.sessionType === SESSION_TYPE.F2F) {

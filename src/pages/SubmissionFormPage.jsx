@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle, Send, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle, Send, Save, Upload, FileText, FileArchive, Film, X } from "lucide-react";
 
 export default function SubmissionFormPage() {
   const { slug, id: eventId } = useParams();
@@ -31,6 +31,8 @@ export default function SubmissionFormPage() {
     videoUrl: "",
     techStack: "",
   });
+  const [files, setFiles] = useState([]); // [{ name, url, type }]
+  const [uploading, setUploading] = useState(null); // which category is uploading
 
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
@@ -51,12 +53,57 @@ export default function SubmissionFormPage() {
               videoUrl: sub.videoUrl || "",
               techStack: (sub.techStack || []).join(", "),
             });
+            if (Array.isArray(sub.files)) setFiles(sub.files);
           }
         } catch { /* no existing submission */ }
       })
       .catch(() => setError("Hackathon not found."))
       .finally(() => setLoading(false));
   }, [slug, currentUser, navigate]);
+
+  const handleFileUpload = async (e, category) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const maxSize = category === "video" ? 200 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError(`File too large. Max ${category === "video" ? "200" : "50"} MB.`);
+      return;
+    }
+
+    setUploading(category);
+    setError(null);
+    try {
+      const submissionId = existing?.id || "new";
+      const { uploadUrl, downloadURL } = await apiPost("/api/upload/presigned-url", {
+        fileName: file.name,
+        contentType: file.type,
+        fileType: "submissions",
+        fileId: submissionId,
+      });
+
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      const newFile = { name: file.name, url: downloadURL, type: category };
+      setFiles((prev) => {
+        const filtered = prev.filter((f) => f.type !== category);
+        return [...filtered, newFile];
+      });
+    } catch (err) {
+      setError(err.message || "File upload failed.");
+    } finally {
+      setUploading(null);
+      e.target.value = "";
+    }
+  };
+
+  const removeFile = (category) => {
+    setFiles((prev) => prev.filter((f) => f.type !== category));
+  };
 
   const handleSave = async () => {
     if (!hackathon) return;
@@ -66,6 +113,7 @@ export default function SubmissionFormPage() {
       const payload = {
         ...form,
         techStack: form.techStack.split(",").map((s) => s.trim()).filter(Boolean),
+        files,
       };
 
       if (existing) {
@@ -214,6 +262,47 @@ export default function SubmissionFormPage() {
               placeholder="React, Node.js, Firebase, Claude API"
               disabled={isSubmitted}
             />
+          </div>
+
+          {/* File Uploads */}
+          <div className="space-y-3">
+            <Label>File Uploads</Label>
+            {[
+              { category: "presentation", label: "Presentation (PDF/PPTX)", accept: ".pdf,.pptx,.ppt", icon: FileText },
+              { category: "code", label: "Source Code (ZIP)", accept: ".zip,.tar.gz,.gz", icon: FileArchive },
+              { category: "video", label: "Demo Video", accept: "video/*", icon: Film },
+            ].map(({ category, label, accept, icon: Icon }) => {
+              const uploaded = files.find((f) => f.type === category);
+              const isUploading = uploading === category;
+              return (
+                <div key={category} className="flex items-center gap-3 rounded-base border-2 border-border bg-background px-4 py-3">
+                  <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    {uploaded ? (
+                      <div className="flex items-center gap-2">
+                        <a href={uploaded.url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-main hover:underline truncate">
+                          {uploaded.name}
+                        </a>
+                        {!isSubmitted && (
+                          <button type="button" onClick={() => removeFile(category)} className="text-muted-foreground hover:text-destructive">
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">{label}</span>
+                    )}
+                  </div>
+                  {!isSubmitted && (
+                    <label className={`flex cursor-pointer items-center gap-1 rounded-base border-2 border-border px-3 py-1.5 text-xs font-bold transition-colors hover:bg-card ${isUploading ? "opacity-50 pointer-events-none" : ""}`}>
+                      <Upload className="h-3 w-3" />
+                      {isUploading ? "Uploading..." : uploaded ? "Replace" : "Upload"}
+                      <input type="file" accept={accept} className="hidden" onChange={(e) => handleFileUpload(e, category)} disabled={isSubmitted || isUploading} />
+                    </label>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {!isSubmitted && (

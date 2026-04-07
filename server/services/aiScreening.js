@@ -1,21 +1,31 @@
-const Anthropic = require("@anthropic-ai/sdk");
+/**
+ * Ramsha — AI Screening Service (Gemini)
+ *
+ * Uses Google Gemini API for application and team screening.
+ * Falls back gracefully when API key is not configured.
+ */
 
-let client = null;
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-function getClient() {
-  if (!client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      console.warn("ANTHROPIC_API_KEY not set — AI screening will be skipped.");
-      return null;
-    }
-    client = new Anthropic({ apiKey });
+let genAI = null;
+let model = null;
+
+function getModel() {
+  if (model) return model;
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("GEMINI_API_KEY not set — AI screening will be skipped.");
+    return null;
   }
-  return client;
+
+  genAI = new GoogleGenerativeAI(apiKey);
+  model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  return model;
 }
 
 /**
- * Evaluate a registration application using Claude.
+ * Evaluate a registration application using Gemini.
  *
  * @param {object} params
  * @param {object} params.hackathon - Hackathon data (title, description, tracks, criteria)
@@ -24,10 +34,22 @@ function getClient() {
  * @returns {Promise<{score: number, reasoning: string, recommendation: string}>}
  */
 async function screenApplication({ hackathon, registration, userEmail }) {
-  const anthropic = getClient();
-  if (!anthropic) {
+  const gemini = getModel();
+  if (!gemini) {
     return { score: 50, reasoning: "AI screening unavailable (API key not configured).", recommendation: "manual_review" };
   }
+
+  // Use organizer's custom criteria if available, otherwise use defaults
+  const customCriteria = hackathon.aiScreeningConfig?.criteria;
+  const criteriaSection = customCriteria?.length > 0
+    ? `ORGANIZER-DEFINED CRITERIA (evaluate strictly against these):\n${customCriteria.map((c, i) => `${i + 1}. ${c.name} (weight: ${c.weight}): ${c.description || ""}`).join("\n")}`
+    : `Evaluate based on:\n1. Relevance of skills/experience to the hackathon theme\n2. Quality and thoughtfulness of responses\n3. Motivation and commitment level\n4. Potential to contribute to a team`;
+
+  const langNote = hackathon.aiScreeningConfig?.language === "ar"
+    ? "\nNote: Application may be in Arabic. Evaluate content quality regardless of language."
+    : hackathon.aiScreeningConfig?.language === "both"
+    ? "\nNote: Application may be in Arabic or English. Evaluate content quality regardless of language."
+    : "";
 
   const prompt = `You are an AI screening assistant for hackathon applications. Evaluate this application and provide a score from 0-100.
 
@@ -39,30 +61,22 @@ APPLICANT EMAIL: ${userEmail}
 APPLICATION RESPONSES:
 ${JSON.stringify(registration.formResponses || {}, null, 2)}
 
-Evaluate based on:
-1. Relevance of skills/experience to the hackathon theme
-2. Quality and thoughtfulness of responses
-3. Motivation and commitment level
-4. Potential to contribute to a team
+${criteriaSection}${langNote}
 
-Respond in this exact JSON format:
+Respond in this exact JSON format ONLY (no markdown, no explanation outside JSON):
 {"score": <0-100>, "reasoning": "<2-3 sentence explanation>", "recommendation": "<accept|reject|manual_review>"}`;
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 300,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const result = await gemini.generateContent(prompt);
+    const text = result.response.text();
 
-    const text = message.content[0]?.text || "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const result = JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
       return {
-        score: Math.min(100, Math.max(0, Number(result.score) || 50)),
-        reasoning: result.reasoning || "",
-        recommendation: result.recommendation || "manual_review",
+        score: Math.min(100, Math.max(0, Number(parsed.score) || 50)),
+        reasoning: parsed.reasoning || "",
+        recommendation: parsed.recommendation || "manual_review",
       };
     }
 
@@ -77,8 +91,8 @@ Respond in this exact JSON format:
  * Evaluate a team's overall readiness.
  */
 async function screenTeam({ hackathon, team, members }) {
-  const anthropic = getClient();
-  if (!anthropic) {
+  const gemini = getModel();
+  if (!gemini) {
     return { score: 50, reasoning: "AI screening unavailable.", recommendation: "manual_review" };
   }
 
@@ -94,23 +108,19 @@ Evaluate:
 2. Role diversity potential
 3. Track alignment
 
-Respond in JSON: {"score": <0-100>, "reasoning": "<brief explanation>", "recommendation": "<accept|reject|manual_review>"}`;
+Respond in JSON ONLY: {"score": <0-100>, "reasoning": "<brief explanation>", "recommendation": "<accept|reject|manual_review>"}`;
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 200,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const result = await gemini.generateContent(prompt);
+    const text = result.response.text();
 
-    const text = message.content[0]?.text || "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const result = JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
       return {
-        score: Math.min(100, Math.max(0, Number(result.score) || 50)),
-        reasoning: result.reasoning || "",
-        recommendation: result.recommendation || "manual_review",
+        score: Math.min(100, Math.max(0, Number(parsed.score) || 50)),
+        reasoning: parsed.reasoning || "",
+        recommendation: parsed.recommendation || "manual_review",
       };
     }
     return { score: 50, reasoning: "Could not parse response.", recommendation: "manual_review" };

@@ -166,29 +166,85 @@ export default function RegistrationFormPage() {
           </div>
 
           {/* Custom fields from hackathon settings */}
-          {customFields.map((field, idx) => (
-            <div key={idx} className="space-y-2">
-              <Label htmlFor={`custom-${idx}`}>
-                {field.name} {field.required && "*"}
-              </Label>
-              {field.type === "textarea" ? (
-                <Textarea
-                  id={`custom-${idx}`}
-                  value={formResponses[field.name] || ""}
-                  onChange={(e) => setFormResponses({ ...formResponses, [field.name]: e.target.value })}
-                  required={field.required}
-                />
-              ) : (
-                <Input
-                  id={`custom-${idx}`}
-                  type={field.type || "text"}
-                  value={formResponses[field.name] || ""}
-                  onChange={(e) => setFormResponses({ ...formResponses, [field.name]: e.target.value })}
-                  required={field.required}
-                />
-              )}
-            </div>
-          ))}
+          {customFields.map((field) => {
+            const key = field.id || field.name;
+            const label = field.label || field.name;
+            return (
+              <div key={key} className="space-y-2">
+                {field.type !== "checkbox" && (
+                  <Label htmlFor={`custom-${key}`}>
+                    {label} {field.required && <span className="text-destructive">*</span>}
+                  </Label>
+                )}
+
+                {field.type === "textarea" && (
+                  <Textarea
+                    id={`custom-${key}`}
+                    value={formResponses[key] || ""}
+                    onChange={(e) => setFormResponses({ ...formResponses, [key]: e.target.value })}
+                    required={field.required}
+                  />
+                )}
+
+                {field.type === "select" && (
+                  <select
+                    id={`custom-${key}`}
+                    value={formResponses[key] || ""}
+                    onChange={(e) => setFormResponses({ ...formResponses, [key]: e.target.value })}
+                    required={field.required}
+                    className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main"
+                  >
+                    <option value="">Select...</option>
+                    {(field.options || []).map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                )}
+
+                {field.type === "checkbox" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      id={`custom-${key}`}
+                      type="checkbox"
+                      checked={!!formResponses[key]}
+                      onChange={(e) => setFormResponses({ ...formResponses, [key]: e.target.checked })}
+                      className="h-4 w-4 rounded border-2 border-border accent-main"
+                    />
+                    <span className="text-sm text-foreground">{label}</span>
+                  </div>
+                )}
+
+                {field.type === "radio" && (
+                  <div className="space-y-2">
+                    {(field.options || []).map((opt) => (
+                      <label key={opt} className="flex items-center gap-2 text-sm text-foreground">
+                        <input
+                          type="radio"
+                          name={`custom-${key}`}
+                          value={opt}
+                          checked={formResponses[key] === opt}
+                          onChange={(e) => setFormResponses({ ...formResponses, [key]: e.target.value })}
+                          required={field.required}
+                          className="h-4 w-4 accent-main"
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {(!field.type || field.type === "text" || !["textarea", "select", "checkbox", "radio"].includes(field.type)) && (
+                  <Input
+                    id={`custom-${key}`}
+                    type="text"
+                    value={formResponses[key] || ""}
+                    onChange={(e) => setFormResponses({ ...formResponses, [key]: e.target.value })}
+                    required={field.required}
+                  />
+                )}
+              </div>
+            );
+          })}
 
           <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? "Submitting..." : "Submit Registration"}

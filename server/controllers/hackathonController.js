@@ -22,6 +22,10 @@ async function createHackathon(req, res) {
       schedule,
       registrationSettings,
       isPublic,
+      aiScreeningConfig,
+      workbackSchedule,
+      resources,
+      sponsors,
     } = req.body;
 
     if (!title || typeof title !== "string" || title.trim().length === 0) {
@@ -54,6 +58,14 @@ async function createHackathon(req, res) {
         requireApproval: true,
         customFields: [],
       },
+      aiScreeningConfig: aiScreeningConfig || {
+        enabled: false,
+        criteria: [],
+        autoAcceptThreshold: 80,
+        autoRejectThreshold: 30,
+        language: "both",
+      },
+      workbackSchedule: Array.isArray(workbackSchedule) ? workbackSchedule : [],
       status: HACKATHON_STATUS.DRAFT,
       isPublic: isPublic === true,
       registrationCount: 0,
@@ -63,6 +75,16 @@ async function createHackathon(req, res) {
     };
 
     const docRef = await hackathonsCol().add(hackathonData);
+
+    // Dual write to events collection so My Events page sees it
+    const eventsData = {
+      ...hackathonData,
+      ownerUid: req.uid,
+      name: hackathonData.title,
+      eventType: "hackathon",
+      visibility: hackathonData.isPublic ? "public" : "private",
+    };
+    await db().collection("events").doc(docRef.id).set(eventsData);
 
     return res.status(201).json({
       id: docRef.id,

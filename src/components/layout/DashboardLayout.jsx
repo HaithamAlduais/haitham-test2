@@ -3,7 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Bell, Search, Users, Trophy, Compass } from 'lucide-react';
+import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Search, Users, Trophy, Compass } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 /**
  * Shared dashboard shell: sidebar + top bar + mobile bottom nav.
@@ -114,9 +115,7 @@ export function DashboardLayout({ children, activePath }) {
             <Button variant="nav" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button variant="nav" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <NotificationBell />
             <div className="hidden sm:flex items-center gap-2.5 ms-2">
               <div className="flex flex-col items-end text-end">
                 <span className="text-sm font-bold text-foreground">{userName}</span>

@@ -1,25 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
-import { apiGet, apiPatch } from "../../utils/apiClient";
+import { apiGet, apiPatch, apiPost } from "../../utils/apiClient";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Camera } from "lucide-react";
 
 function ProfileInfoSection({ showToast }) {
   const { currentUser, userRole } = useAuth();
   const { t } = useLanguage();
 
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [createdAt, setCreatedAt] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await apiGet("/api/users/profile");
         setDisplayName(data.displayName || "");
+        setAvatarUrl(data.avatarUrl || null);
         setCreatedAt(data.createdAt);
       } catch {
         showToast(t("profileLoadFailed"), "error");
@@ -29,6 +34,37 @@ function ProfileInfoSection({ showToast }) {
     };
     fetchProfile();
   }, [showToast, t]);
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("Please select an image file.", "error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image must be under 5 MB.", "error");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const { uploadUrl, downloadURL } = await apiPost("/api/upload/presigned-url", {
+        fileName: file.name,
+        contentType: file.type,
+        fileType: "avatars",
+        fileId: currentUser.uid,
+      });
+      await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      await apiPatch("/api/users/profile", { avatarUrl: downloadURL });
+      setAvatarUrl(downloadURL);
+      showToast("Avatar updated!");
+    } catch (err) {
+      showToast(err.message || "Avatar upload failed.", "error");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -62,6 +98,32 @@ function ProfileInfoSection({ showToast }) {
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-4">
+          {/* Avatar */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="h-20 w-20 rounded-full border-2 border-border object-cover shadow-neo-sm" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-main text-2xl font-black text-main-foreground shadow-neo-sm">
+                  {currentUser?.email?.[0]?.toUpperCase() ?? "?"}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute -bottom-1 -end-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-border bg-background shadow-neo-sm hover:bg-card transition-colors"
+              >
+                <Camera className="h-4 w-4 text-foreground" />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">{uploadingAvatar ? "Uploading..." : "Profile Photo"}</p>
+              <p className="text-xs text-muted-foreground">Click the camera icon to change</p>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="displayName">{t("displayName")}</Label>
             <Input

@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
+const { generateQrToken, generateQrSecret } = require("../utils/qrToken");
 
 // Lazy accessors — Firestore is only available after admin.initializeApp()
 // has been called in server/index.js, so we access them via functions.
@@ -38,6 +39,8 @@ async function createSession(req, res) {
       autoCloseTime: null,
       eventId: eventId || null,
       qrCode: sessionType === SESSION_TYPE.QR_CODE ? uuidv4() : null,
+      qrSecret: sessionType === SESSION_TYPE.QR_CODE ? generateQrSecret() : null,
+      qrRotationInterval: sessionType === SESSION_TYPE.QR_CODE ? 120 : null, // 2 min default
       radiusMeters: sessionType === SESSION_TYPE.F2F && radiusMeters ? Number(radiusMeters) : null,
       instructorLocation: null,
       createdAt: now,
@@ -245,6 +248,46 @@ async function updateSession(req, res) {
   }
 }
 
+// ── GET /api/sessions/:id/qr-token ─────────────────────────────────────────
+// Returns the current rotating QR token for an active QR session.
+
+async function getQrTokenEndpoint(req, res) {
+  try {
+    const { id } = req.params;
+    const docSnap = await sessionsCol().doc(id).get();
+
+    if (!docSnap.exists) return res.status(404).json({ error: "Session not found." });
+    const session = docSnap.data();
+
+    if (session.sessionType !== SESSION_TYPE.QR_CODE) {
+      return res.status(400).json({ error: "Not a QR session." });
+    }
+    if (session.status !== SESSION_STATUS.ACTIVE) {
+      return res.status(400).json({ error: "Session is not active." });
+    }
+
+    // Only the owner can get the QR display token
+    if (session.ownerUid !== req.uid) {
+      return res.status(403).json({ error: "Not authorized." });
+    }
+
+    const interval = session.qrRotationInterval || 120;
+    const { token, expiresAt } = generateQrToken(session.qrSecret, interval);
+
+    return res.json({
+      sessionId: id,
+      token,
+      expiresAt,
+      intervalSeconds: interval,
+      // The QR code encodes: { sessionId, token, ts }
+      qrPayload: JSON.stringify({ s: id, t: token, ts: Date.now() }),
+    });
+  } catch (err) {
+    console.error("getQrToken error:", err);
+    return res.status(500).json({ error: "Failed to generate QR token." });
+  }
+}
+
 module.exports = {
   createSession,
   listSessions,
@@ -252,4 +295,5 @@ module.exports = {
   activateSession,
   closeSession,
   updateSession,
+  getQrTokenEndpoint,
 };

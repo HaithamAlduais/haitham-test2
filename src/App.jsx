@@ -27,6 +27,15 @@ import ProjectGalleryPage from './pages/ProjectGalleryPage'
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage'
 import WorkshopsListPage from './pages/WorkshopsPage'
 import WinnerAnnouncementPage from './pages/WinnerAnnouncementPage'
+import VotingPage from './pages/VotingPage'
+import CertificatePage from './pages/CertificatePage'
+import SponsorDashboardPage from './pages/SponsorDashboardPage'
+import SponsorPortalPage from './pages/SponsorPortalPage'
+import SurveyBuilderPage from './pages/SurveyBuilderPage'
+import SurveyResponsePage from './pages/SurveyResponsePage'
+import EventLegacyPage from './pages/EventLegacyPage'
+import WorkbackDashboardPage from './pages/WorkbackDashboardPage'
+import OfficeHoursPage from './pages/OfficeHoursPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -178,6 +187,11 @@ function App() {
       <Route path="/event/:id/gallery" element={<ProjectGalleryPage />} />
       <Route path="/event/:id/workshops" element={<WorkshopsListPage />} />
       <Route path="/event/:id/winners" element={<WinnerAnnouncementPage />} />
+      <Route path="/event/:id/vote" element={<VotingPage />} />
+      <Route path="/event/:id/certificate" element={<CertificatePage />} />
+      <Route path="/event/:id/survey/:surveyId" element={<SurveyResponsePage />} />
+      <Route path="/event/:id/legacy" element={<EventLegacyPage />} />
+      <Route path="/event/:id/office-hours" element={<OfficeHoursPage />} />
 
       {/* Legacy hackathon routes (backward compat) */}
       <Route path="/hackathon/:slug" element={<HackathonPublicPage />} />
@@ -186,6 +200,44 @@ function App() {
       <Route path="/hackathon/:slug/submit" element={<SubmissionFormPage />} />
       <Route path="/hackathon/:slug/gallery" element={<ProjectGalleryPage />} />
       <Route path="/hackathon/:slug/workshops" element={<WorkshopsListPage />} />
+
+      {/* Sponsor routes */}
+      <Route
+        path="/sponsor/dashboard"
+        element={
+          <PrivateRoute requiredRoles={["Sponsor", "Organizer"]}>
+            <SponsorDashboardPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/sponsor/:id"
+        element={
+          <PrivateRoute requiredRoles={["Sponsor", "Organizer"]}>
+            <SponsorPortalPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Survey builder (organizer) */}
+      <Route
+        path="/hackathons/:id/surveys"
+        element={
+          <PrivateRoute requiredRole="Organizer">
+            <SurveyBuilderPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Workback dashboard */}
+      <Route
+        path="/hackathons/:id/workback"
+        element={
+          <PrivateRoute requiredRole="Organizer">
+            <WorkbackDashboardPage />
+          </PrivateRoute>
+        }
+      />
 
       {/* Analytics */}
       <Route

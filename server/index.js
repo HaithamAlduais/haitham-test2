@@ -67,6 +67,7 @@ const userRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/upload');
 const participantRoutes = require('./routes/participant');
 const exportRoutes = require('./routes/export');
+const sponsorPortalRoutes = require('./routes/sponsorPortal');
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/events', eventRoutes);
@@ -75,11 +76,17 @@ app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/participant', participantRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/sponsor', sponsorPortalRoutes);
+const notificationRoutes = require('./routes/notifications');
+app.use('/api/notifications', notificationRoutes);
 
 // A simple test route
 app.get('/api/test', (req, res) => {
   res.json({ message: "Hello from your Express backend!" });
 });
+
+// ── Discord Bot ────────────────────────────────────────────────────────────
+const { initDiscordBot } = require('./services/discordService');
 
 // ── Scheduled Jobs ──────────────────────────────────────────────────────────
 const { startAutoCloseJob } = require('./jobs/autoClose');
@@ -93,5 +100,6 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Express server running on http://localhost:${PORT}`);
     startAutoCloseJob();
+    initDiscordBot();
   });
 }

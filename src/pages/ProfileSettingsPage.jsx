@@ -5,6 +5,8 @@ import ProfileInfoSection from "../components/settings/ProfileInfoSection";
 import ChangePasswordSection from "../components/settings/ChangePasswordSection";
 import DeleteAccountSection from "../components/settings/DeleteAccountSection";
 import ExtendedProfileSection from "../components/settings/ExtendedProfileSection";
+import ProfileVisibilitySection from "../components/settings/ProfileVisibilitySection";
+import BadgeGrid from "../components/profile/BadgeGrid";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 const ProfileSettingsPage = () => {
@@ -30,7 +32,11 @@ const ProfileSettingsPage = () => {
 
         <ProfileInfoSection showToast={showToast} />
 
+        <BadgeGrid />
+
         <ExtendedProfileSection showToast={showToast} />
+
+        <ProfileVisibilitySection showToast={showToast} />
 
         {isPasswordProvider && <ChangePasswordSection showToast={showToast} />}
 

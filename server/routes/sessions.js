@@ -7,6 +7,7 @@ const {
   activateSession,
   closeSession,
   updateSession,
+  getQrTokenEndpoint,
 } = require("../controllers/sessionController");
 
 const router = express.Router();
@@ -28,5 +29,8 @@ router.patch("/:id/activate", requireRole("Organizer"), activateSession);
 
 // PATCH  /api/sessions/:id/close    — Active -> Closed (Organizer only)
 router.patch("/:id/close", requireRole("Organizer"), closeSession);
+
+// GET    /api/sessions/:id/qr-token — Get current rotating QR token (Organizer only)
+router.get("/:id/qr-token", requireRole("Organizer"), getQrTokenEndpoint);
 
 module.exports = router;

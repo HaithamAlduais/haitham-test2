@@ -29,6 +29,7 @@ async function getProfile(req, res) {
       professional: data.professional || null,
       social: data.social || null,
       profileCompleteness: data.profileCompleteness || 0,
+      profileVisibility: data.profileVisibility || "public",
       createdAt: data.createdAt || null,
     });
   } catch (err) {
@@ -40,7 +41,10 @@ async function getProfile(req, res) {
 // ── PATCH /api/users/profile ────────────────────────────────────────────────
 
 /** Allowed top-level string fields. */
-const STRING_FIELDS = ["displayName", "bio", "phone", "location"];
+const STRING_FIELDS = ["displayName", "bio", "phone", "location", "avatarUrl"];
+
+/** Allowed values for profile visibility. */
+const VISIBILITY_OPTIONS = ["public", "registered-events-only", "private"];
 
 /** Compute profile completeness percentage (0-100). */
 function computeCompleteness(data) {
@@ -60,7 +64,7 @@ function computeCompleteness(data) {
 
 async function updateProfile(req, res) {
   try {
-    const { displayName, bio, phone, location, skills, interests, education, professional, social } = req.body;
+    const { displayName, bio, phone, location, skills, interests, education, professional, social, avatarUrl, profileVisibility } = req.body;
 
     const updates = {};
 
@@ -80,6 +84,13 @@ async function updateProfile(req, res) {
     if (education !== undefined) updates.education = education || {};
     if (professional !== undefined) updates.professional = professional || {};
     if (social !== undefined) updates.social = social || {};
+
+    // Profile visibility
+    if (profileVisibility !== undefined) {
+      if (VISIBILITY_OPTIONS.includes(profileVisibility)) {
+        updates.profileVisibility = profileVisibility;
+      }
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: "No valid fields to update." });

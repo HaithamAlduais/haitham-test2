@@ -17,7 +17,7 @@ export default defineConfig({
     proxy: {
       // Forward all /api requests to the Express back-end during development.
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
     },

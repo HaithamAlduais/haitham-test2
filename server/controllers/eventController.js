@@ -176,17 +176,18 @@ async function listPublicEvents(req, res) {
   try {
     const { type } = req.query;
 
+    // Query all events ordered by creation (no composite index needed)
     const snapshot = await eventsCol()
-      .where("isPublic", "==", true)
       .orderBy("createdAt", "desc")
-      .limit(50)
+      .limit(100)
       .get();
 
     let events = snapshot.docs.map((doc) => {
       const d = doc.data();
       return {
         id: doc.id,
-        name: d.name,
+        name: d.name || d.title,
+        title: d.title || d.name,
         tagline: d.tagline,
         slug: d.slug,
         eventType: d.eventType,
@@ -195,6 +196,7 @@ async function listPublicEvents(req, res) {
         schedule: d.schedule,
         tracks: d.tracks,
         isPublic: d.isPublic,
+        visibility: d.visibility,
         registrationCount: d.registrationCount || 0,
         teamCount: d.teamCount || 0,
         capacity: d.capacity,
@@ -203,13 +205,13 @@ async function listPublicEvents(req, res) {
       };
     });
 
+    // Filter to public events (isPublic:true OR visibility:"public")
+    events = events.filter((e) => e.isPublic === true || e.visibility === "public");
+
     if (type) {
       const types = type.split(",");
       events = events.filter((e) => types.includes(e.eventType));
     }
-
-    // Exclude drafts
-    events = events.filter((e) => e.status !== "draft");
 
     return res.json({ data: events });
   } catch (err) {

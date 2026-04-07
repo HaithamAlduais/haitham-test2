@@ -15,7 +15,18 @@ const submissionRoutes = require("./submissions");
 const judgingRoutes = require("./judging");
 const announcementRoutes = require("./announcements");
 const workshopRoutes = require("./workshops");
+const sponsorRoutes = require("./sponsors");
+const resourceRoutes = require("./resources");
+const votingRoutes = require("./voting");
 const aiRoutes = require("./ai");
+const certificateRoutes = require("./certificates");
+const badgeRoutes = require("./badges");
+const surveyRoutes = require("./surveys");
+const judgeManagementRoutes = require("./judgeManagement");
+const communicationRoutes = require("./communications");
+const eligibilityRoutes = require("./eligibility");
+const legacyRoutes = require("./legacy");
+const discordRoutes = require("./discord");
 
 const router = express.Router();
 
@@ -37,6 +48,17 @@ router.use("/:id/submissions", submissionRoutes);
 router.use("/:id", judgingRoutes);
 router.use("/:id/announcements", announcementRoutes);
 router.use("/:id/workshops", workshopRoutes);
+router.use("/:id/sponsors", sponsorRoutes);
+router.use("/:id/resources", resourceRoutes);
+router.use("/:id/votes", votingRoutes);
+router.use("/:id/certificates", certificateRoutes);
+router.use("/:id/badges", badgeRoutes);
+router.use("/:id/surveys", surveyRoutes);
+router.use("/:id/judges", judgeManagementRoutes);
+router.use("/:id/office-hours", communicationRoutes);
+router.use("/:id/submissions", eligibilityRoutes);
+router.use("/:id/legacy", legacyRoutes);
+router.use("/:id/discord", discordRoutes);
 router.use("/:id", aiRoutes);
 
 module.exports = router;

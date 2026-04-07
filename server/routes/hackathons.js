@@ -11,6 +11,7 @@ const {
 } = require("../controllers/hackathonController");
 const registrationRoutes = require("./registrations");
 const teamRoutes = require("./teams");
+const submissionRoutes = require("./submissions");
 
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.patch("/:id/status", requireRole("Organizer"), updateHackathonStatus);
 // ── Nested: registrations, teams ────────────────────────────────────────────
 router.use("/:id/registrations", registrationRoutes);
 router.use("/:id/teams", teamRoutes);
+router.use("/:id/submissions", submissionRoutes);
 
 module.exports = router;

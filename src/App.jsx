@@ -19,6 +19,7 @@ import ManageHackathonPage from './pages/ManageHackathonPage'
 import HackathonPublicPage from './pages/HackathonPublicPage'
 import RegistrationFormPage from './pages/RegistrationFormPage'
 import TeamFormationPage from './pages/TeamFormationPage'
+import SubmissionFormPage from './pages/SubmissionFormPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -165,6 +166,7 @@ function App() {
       <Route path="/hackathon/:slug" element={<HackathonPublicPage />} />
       <Route path="/hackathon/:slug/register" element={<RegistrationFormPage />} />
       <Route path="/hackathon/:slug/teams" element={<TeamFormationPage />} />
+      <Route path="/hackathon/:slug/submit" element={<SubmissionFormPage />} />
 
       {/* Shared routes (all roles) */}
       <Route

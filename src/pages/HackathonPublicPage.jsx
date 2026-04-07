@@ -72,14 +72,20 @@ export default function HackathonPublicPage() {
                 <p className="mt-2 text-lg text-muted-foreground">{hackathon.tagline}</p>
               )}
             </div>
-            {isRegistrationOpen && (
-              <Button
-                onClick={() => currentUser ? navigate(`/hackathon/${slug}/register`) : navigate("/login")}
-                className="shrink-0"
-              >
-                Register Now
-              </Button>
-            )}
+            <div className="flex gap-2 shrink-0">
+              {isRegistrationOpen && (
+                <Button
+                  onClick={() => currentUser ? navigate(`/hackathon/${slug}/register`) : navigate("/login")}
+                >
+                  Register Now
+                </Button>
+              )}
+              {hackathon.status === "active" && currentUser && (
+                <Button variant="neutral" onClick={() => navigate(`/hackathon/${slug}/submit`)}>
+                  Submit Project
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Quick stats */}

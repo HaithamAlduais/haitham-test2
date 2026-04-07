@@ -142,12 +142,9 @@ const EventCreationFlow = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Type-specific full-screen wizards
+  // Only hackathon gets the full 12-step wizard
+  // All other types use the simple 3-step flow (type → details → publish)
   if (eventType === "hackathon") return <HackathonCreationWizard onClose={handleClose} />;
-  if (eventType === "workshop") return <WorkshopWizard onClose={handleClose} />;
-  if (eventType === "seminar") return <SeminarWizard onClose={handleClose} />;
-  if (eventType === "training") return <TrainingWizard onClose={handleClose} />;
-  if (eventType === "conference") return <ConferenceWizard onClose={handleClose} />;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">

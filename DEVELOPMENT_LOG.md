@@ -91,3 +91,16 @@ Replaced the placeholder ParticipantHomePage with a full dashboard featuring thr
 
 ### Step 4.7 — Winner Announcement Page
 Built the winner announcement / leaderboard page at /event/:id/winners. Features a podium-style layout for the top 3 (gold/silver/bronze medal circles), with the 1st place card being visually larger and centered. Full rankings list for positions 4+ shows project names, tech stacks, scores, and links to GitHub/demo. Works as both a live leaderboard during judging and a final winners announcement when the event is completed.
+
+---
+
+## Phase 5: Production Readiness
+
+### Step 5.1 — Firestore Security Rules
+Rewrote the entire firestore.rules file for the multi-role system. Covers all collections and subcollections: users (own profile read/write), events (public read, organizer CRUD), registrations (participant create, organizer manage), teams/members (participant create/leave, captain manage), submissions (participant create/edit, organizer view), scores (judges write own only, cannot read other judges' scores — confidentiality enforced), announcements and workshops (organizer CRUD, all authenticated read). Legacy hackathons collection covered with wildcard rules.
+
+### Step 5.2 — Role-Aware Dashboard Sidebar
+Made the DashboardLayout sidebar dynamic based on the user's role. Participants see: Dashboard, Explore, Settings. Organizers see: Dashboard, My Events, Sessions, Events, Settings. The sidebar no longer shows organizer-only navigation to participants.
+
+### Step 5.3 — CSV Export
+Built CSV export endpoints for organizers: /api/export/:eventId/registrations (email, status, AI score, date), /api/export/:eventId/teams (name, code, status, members, track), /api/export/:eventId/submissions (project, status, score, GitHub, tech stack). Download buttons added to the ManageHackathonPage Settings tab. Also added an Analytics shortcut button to the manage page header.

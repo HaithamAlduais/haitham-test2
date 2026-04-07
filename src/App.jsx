@@ -17,6 +17,7 @@ import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import HackathonsPage from './pages/HackathonsPage'
 import ManageHackathonPage from './pages/ManageHackathonPage'
 import HackathonPublicPage from './pages/HackathonPublicPage'
+import EventPublicPage from './pages/EventPublicPage'
 import RegistrationFormPage from './pages/RegistrationFormPage'
 import TeamFormationPage from './pages/TeamFormationPage'
 import SubmissionFormPage from './pages/SubmissionFormPage'
@@ -167,13 +168,21 @@ function App() {
         }
       />
 
-      {/* Public pages */}
+      {/* Public pages — unified event routes */}
       <Route path="/explore" element={<ExplorePage />} />
+      <Route path="/event/:id" element={<EventPublicPage />} />
+      <Route path="/event/:id/register" element={<RegistrationFormPage />} />
+      <Route path="/event/:id/teams" element={<TeamFormationPage />} />
+      <Route path="/event/:id/submit" element={<SubmissionFormPage />} />
+      <Route path="/event/:id/gallery" element={<ProjectGalleryPage />} />
+      <Route path="/event/:id/workshops" element={<WorkshopsListPage />} />
+
+      {/* Legacy hackathon routes (backward compat) */}
       <Route path="/hackathon/:slug" element={<HackathonPublicPage />} />
-      <Route path="/hackathon/:slug/gallery" element={<ProjectGalleryPage />} />
       <Route path="/hackathon/:slug/register" element={<RegistrationFormPage />} />
       <Route path="/hackathon/:slug/teams" element={<TeamFormationPage />} />
       <Route path="/hackathon/:slug/submit" element={<SubmissionFormPage />} />
+      <Route path="/hackathon/:slug/gallery" element={<ProjectGalleryPage />} />
       <Route path="/hackathon/:slug/workshops" element={<WorkshopsListPage />} />
 
       {/* Analytics */}

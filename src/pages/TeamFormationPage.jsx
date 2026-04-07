@@ -33,7 +33,7 @@ function TeamCard({ team }) {
 }
 
 export default function TeamFormationPage() {
-  const { slug } = useParams();
+  const { slug, id: eventId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { dir } = useLanguage();
@@ -52,12 +52,12 @@ export default function TeamFormationPage() {
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
 
-    fetch(`/api/hackathons/public/${slug}`)
+    fetch(eventId ? `/api/events/public/${eventId}` : `/api/hackathons/public/${slug}`)
       .then((res) => res.json())
       .then(async (h) => {
         setHackathon(h);
         try {
-          const data = await apiGet(`/api/hackathons/${h.id}/teams`);
+          const data = await apiGet(`/api/events/${h.id}/teams`);
           setTeams(data.data || []);
         } catch { /* no teams yet */ }
       })
@@ -71,7 +71,7 @@ export default function TeamFormationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await apiPost(`/api/hackathons/${hackathon.id}/teams`, { name: newTeamName });
+      const result = await apiPost(`/api/events/${hackathon.id}/teams`, { name: newTeamName });
       setMessage(`Team created! Share code: ${result.code}`);
       setShowCreateForm(false);
       setNewTeamName("");
@@ -91,7 +91,7 @@ export default function TeamFormationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await apiPost(`/api/hackathons/${hackathon.id}/teams/join`, { code: joinCode });
+      const result = await apiPost(`/api/events/${hackathon.id}/teams/join`, { code: joinCode });
       setMessage(`Joined team: ${result.teamName}`);
       setShowJoinForm(false);
       setJoinCode("");

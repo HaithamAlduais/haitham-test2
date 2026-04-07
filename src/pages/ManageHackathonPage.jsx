@@ -53,9 +53,9 @@ export default function ManageHackathonPage() {
   const fetchAll = useCallback(async () => {
     try {
       const [h, regs, t] = await Promise.all([
-        apiGet(`/api/hackathons/${id}`),
-        apiGet(`/api/hackathons/${id}/registrations`).catch(() => ({ data: [] })),
-        apiGet(`/api/hackathons/${id}/teams/admin/all`).catch(() => ({ data: [] })),
+        apiGet(`/api/events/${id}`),
+        apiGet(`/api/events/${id}/registrations`).catch(() => ({ data: [] })),
+        apiGet(`/api/events/${id}/teams/admin/all`).catch(() => ({ data: [] })),
       ]);
       setHackathon(h);
       setRegistrations(regs.data || []);
@@ -72,7 +72,7 @@ export default function ManageHackathonPage() {
   const updateRegStatus = async (regId, status) => {
     setActionLoading(regId);
     try {
-      await apiPatch(`/api/hackathons/${id}/registrations/${regId}`, { status });
+      await apiPatch(`/api/events/${id}/registrations/${regId}`, { status });
       setRegistrations((prev) =>
         prev.map((r) => (r.id === regId ? { ...r, status } : r))
       );
@@ -84,7 +84,7 @@ export default function ManageHackathonPage() {
     if (selectedRegs.length === 0) return;
     setActionLoading("bulk");
     try {
-      await apiPost(`/api/hackathons/${id}/registrations/bulk-status`, {
+      await apiPost(`/api/events/${id}/registrations/bulk-status`, {
         registrationIds: selectedRegs,
         status,
       });
@@ -99,7 +99,7 @@ export default function ManageHackathonPage() {
   const updateHackathonStatus = async (newStatus) => {
     setActionLoading("status");
     try {
-      await apiPatch(`/api/hackathons/${id}/status`, { status: newStatus });
+      await apiPatch(`/api/events/${id}/status`, { status: newStatus });
       setHackathon((prev) => ({ ...prev, status: newStatus }));
     } catch { /* silently fail */ }
     setActionLoading(null);
@@ -209,7 +209,7 @@ export default function ManageHackathonPage() {
               onClick={async () => {
                 setAiScreening(true);
                 try {
-                  await apiPost(`/api/hackathons/${id}/ai/screen-all-registrations`);
+                  await apiPost(`/api/events/${id}/ai/screen-all-registrations`);
                   await fetchAll();
                 } catch { /* silently fail */ }
                 setAiScreening(false);

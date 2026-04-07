@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, Send, Save } from "lucide-react";
 
 export default function SubmissionFormPage() {
-  const { slug } = useParams();
+  const { slug, id: eventId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { dir } = useLanguage();
@@ -35,12 +35,12 @@ export default function SubmissionFormPage() {
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
 
-    fetch(`/api/hackathons/public/${slug}`)
+    fetch(eventId ? `/api/events/public/${eventId}` : `/api/hackathons/public/${slug}`)
       .then((res) => res.json())
       .then(async (h) => {
         setHackathon(h);
         try {
-          const sub = await apiGet(`/api/hackathons/${h.id}/submissions/mine`);
+          const sub = await apiGet(`/api/events/${h.id}/submissions/mine`);
           if (sub.submitted) {
             setExisting(sub);
             setForm({
@@ -69,9 +69,9 @@ export default function SubmissionFormPage() {
       };
 
       if (existing) {
-        await apiPatch(`/api/hackathons/${hackathon.id}/submissions/${existing.id}`, payload);
+        await apiPatch(`/api/events/${hackathon.id}/submissions/${existing.id}`, payload);
       } else {
-        const result = await apiPost(`/api/hackathons/${hackathon.id}/submissions`, payload);
+        const result = await apiPost(`/api/events/${hackathon.id}/submissions`, payload);
         setExisting(result);
       }
     } catch (err) {
@@ -86,7 +86,7 @@ export default function SubmissionFormPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await apiPost(`/api/hackathons/${hackathon.id}/submissions/${existing.id}/submit`);
+      await apiPost(`/api/events/${hackathon.id}/submissions/${existing.id}/submit`);
       setSuccess(true);
     } catch (err) {
       setError(err.message);

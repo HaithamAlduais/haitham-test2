@@ -5,7 +5,7 @@ import { apiGet } from "@/utils/apiClient";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, ChevronRight } from "lucide-react";
+import { Plus, Calendar, Users, ChevronRight, Filter } from "lucide-react";
 
 const STATUS_VARIANT = {
   draft: "secondary",
@@ -20,10 +20,11 @@ export default function HackathonsPage() {
   const navigate = useNavigate();
   const [hackathons, setHackathons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const fetchHackathons = useCallback(async () => {
     try {
-      const data = await apiGet("/api/hackathons");
+      const data = await apiGet("/api/events");
       setHackathons(data.data || []);
     } catch {
       // silently fail
@@ -34,16 +35,34 @@ export default function HackathonsPage() {
 
   useEffect(() => { fetchHackathons(); }, [fetchHackathons]);
 
+  const TYPE_ICON = { hackathon: "\u{1F3C6}", workshop: "\u{1F6E0}\u{FE0F}", seminar: "\u{1F3A4}", training: "\u{1F4DA}", conference: "\u{1F3AF}", other: "\u{2728}" };
+  const filtered = typeFilter === "all" ? hackathons : hackathons.filter((h) => h.eventType === typeFilter);
+
   return (
     <DashboardLayout activePath="/hackathons">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-heading text-3xl font-black text-foreground">Hackathons</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your hackathon events</p>
+          <h1 className="font-heading text-3xl font-black text-foreground">My Events</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your hackathons, workshops, seminars, and more</p>
         </div>
         <Button onClick={() => navigate("/events/create")}>
-          <Plus className="h-4 w-4" /> Create Hackathon
+          <Plus className="h-4 w-4" /> Create Event
         </Button>
+      </div>
+
+      {/* Type filter */}
+      <div className="flex flex-wrap gap-1.5 mb-6">
+        {["all", "hackathon", "workshop", "seminar", "training", "conference"].map((t) => (
+          <Button
+            key={t}
+            variant={typeFilter === t ? "default" : "neutral"}
+            size="sm"
+            onClick={() => setTypeFilter(t)}
+            className="capitalize"
+          >
+            {t === "all" ? "All Types" : `${TYPE_ICON[t] || ""} ${t}`}
+          </Button>
+        ))}
       </div>
 
       {loading ? (
@@ -52,16 +71,16 @@ export default function HackathonsPage() {
             <div key={i} className="h-24 rounded-base border-2 border-border bg-card animate-pulse" />
           ))}
         </div>
-      ) : hackathons.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="text-center py-16 rounded-base border-2 border-dashed border-border">
-          <p className="text-muted-foreground mb-4">No hackathons yet.</p>
+          <p className="text-muted-foreground mb-4">{typeFilter === "all" ? "No events yet." : `No ${typeFilter} events yet.`}</p>
           <Button onClick={() => navigate("/events/create")}>
-            <Plus className="h-4 w-4" /> Create Your First Hackathon
+            <Plus className="h-4 w-4" /> Create Your First Event
           </Button>
         </div>
       ) : (
         <div className="space-y-3">
-          {hackathons.map((h) => (
+          {filtered.map((h) => (
             <button
               key={h.id}
               onClick={() => navigate(`/hackathons/${h.id}`)}
@@ -69,9 +88,13 @@ export default function HackathonsPage() {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-bold text-foreground truncate">{h.title}</h3>
+                  <span>{TYPE_ICON[h.eventType] || TYPE_ICON.other}</span>
+                  <h3 className="font-bold text-foreground truncate">{h.name || h.title}</h3>
                   <Badge variant={STATUS_VARIANT[h.status] || "outline"} className="capitalize shrink-0">
                     {h.status}
+                  </Badge>
+                  <Badge variant="outline" className="capitalize text-[10px] shrink-0">
+                    {h.eventType || "other"}
                   </Badge>
                 </div>
                 {h.tagline && (

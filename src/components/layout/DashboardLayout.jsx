@@ -23,7 +23,7 @@ export function DashboardLayout({ children, activePath }) {
 
   const navItems = [
     { icon: LayoutDashboard, label: t('dashboard'), path: '/dashboard' },
-    { icon: Trophy, label: 'Hackathons', path: '/hackathons' },
+    { icon: Trophy, label: 'My Events', path: '/hackathons' },
     { icon: CalendarDays, label: t('sessions'), path: '/sessions' },
     { icon: Users, label: t('events'), path: '/events' },
     { icon: Settings, label: t('settingsNav'), path: '/settings' },

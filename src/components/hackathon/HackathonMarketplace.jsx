@@ -21,7 +21,7 @@ function HackathonPreviewCard({ hackathon }) {
 
   return (
     <button
-      onClick={() => navigate(`/hackathon/${hackathon.slug}`)}
+      onClick={() => navigate(`/event/${hackathon.id}`)}
       className="text-start rounded-base border-2 border-border bg-card p-5 shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none transition-all duration-100 group"
     >
       {/* Header */}
@@ -71,7 +71,7 @@ export default function HackathonMarketplace() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/hackathons/public")
+    fetch("/api/events/public")
       .then((res) => res.json())
       .then((json) => setHackathons(json.data || []))
       .catch(() => setHackathons([]))
@@ -84,10 +84,10 @@ export default function HackathonMarketplace() {
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="font-heading font-black text-3xl md:text-4xl text-foreground mb-3">
-            Explore Hackathons
+            Explore Events
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Browse upcoming and active hackathons. Find the right challenge for your skills.
+            Browse upcoming hackathons, workshops, seminars, training, and conferences.
           </p>
         </div>
 
@@ -106,9 +106,9 @@ export default function HackathonMarketplace() {
           </div>
         ) : (
           <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
-            <p className="text-muted-foreground mb-4">No hackathons available yet.</p>
-            <Button variant="neutral" onClick={() => navigate("/login")}>
-              Create the first one
+            <p className="text-muted-foreground mb-4">No events available yet.</p>
+            <Button variant="neutral" onClick={() => navigate("/explore")}>
+              Browse All Events
             </Button>
           </div>
         )}

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
 export default function RegistrationFormPage() {
-  const { slug } = useParams();
+  const { slug, id: eventId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { dir } = useLanguage();
@@ -29,14 +29,15 @@ export default function RegistrationFormPage() {
       return;
     }
 
-    // Fetch hackathon by slug
-    fetch(`/api/hackathons/public/${slug}`)
+    // Fetch event by ID or slug
+    const fetchUrl = eventId ? `/api/events/public/${eventId}` : `/api/hackathons/public/${slug}`;
+    fetch(fetchUrl)
       .then((res) => res.json())
       .then(async (h) => {
         setHackathon(h);
         // Check existing registration
         try {
-          const reg = await apiGet(`/api/hackathons/${h.id}/registrations/mine`);
+          const reg = await apiGet(`/api/events/${h.id}/registrations/mine`);
           if (reg.registered) setExisting(reg);
         } catch {
           // Not registered yet
@@ -52,7 +53,7 @@ export default function RegistrationFormPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await apiPost(`/api/hackathons/${hackathon.id}/registrations`, { formResponses });
+      await apiPost(`/api/events/${hackathon.id}/registrations`, { formResponses });
       setSuccess(true);
     } catch (err) {
       setError(err.message || "Registration failed.");

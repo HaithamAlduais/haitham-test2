@@ -165,6 +165,128 @@ export default function RegistrationFormPage() {
             />
           </div>
 
+          {/* ── Skills Survey ── */}
+          <div className="space-y-5 border-t-2 border-border pt-6">
+            <h3 className="text-lg font-black text-foreground">Skills & Experience Survey</h3>
+
+            {/* Experience level */}
+            <div className="space-y-2">
+              <Label>Experience building digital products</Label>
+              <div className="flex flex-wrap gap-2">
+                {["Beginner", "Intermediate", "Advanced"].map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setFormResponses({ ...formResponses, experienceLevel: level })}
+                    className={`rounded-base border-2 px-4 py-2 text-sm font-bold transition-colors ${
+                      formResponses.experienceLevel === level
+                        ? "bg-main text-main-foreground border-border shadow-neo-sm"
+                        : "bg-card text-muted-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Yes/No questions */}
+            {[
+              { key: "builtProduct", label: "Have you built a complete digital product before?" },
+              { key: "previousHackathon", label: "Have you participated in a hackathon before?" },
+            ].map((q) => (
+              <div key={q.key} className="space-y-2">
+                <Label>{q.label}</Label>
+                <div className="flex gap-2">
+                  {["Yes", "No"].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setFormResponses({ ...formResponses, [q.key]: v })}
+                      className={`rounded-base border-2 px-6 py-2 text-sm font-bold transition-colors ${
+                        formResponses[q.key] === v
+                          ? "bg-main text-main-foreground border-border shadow-neo-sm"
+                          : "bg-card text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Skills checkboxes - grouped */}
+            {[
+              { label: "Programming Languages", key: "programmingLangs", options: ["Python", "JavaScript", "TypeScript", "SQL", "Java", "C++", "Go", "Rust"] },
+              { label: "AI Coding Tools", key: "aiTools", options: ["Cursor", "Bolt", "v0", "Replit", "Lovable", "Windsurf", "GitHub Copilot"] },
+              { label: "AI Models", key: "aiModels", options: ["ChatGPT / OpenAI", "Claude / Anthropic", "Gemini / Google", "Llama / Meta", "Mistral"] },
+              { label: "Web Development", key: "webDev", options: ["React", "Next.js", "Vue", "Supabase", "Firebase", "PostgreSQL", "MongoDB", "Node.js"] },
+              { label: "Design", key: "designTools", options: ["Figma", "UI/UX Design", "Adobe XD", "Canva", "Framer"] },
+              { label: "Soft Skills", key: "softSkills", options: ["Teamwork", "Leadership", "Problem Solving", "Time Management", "Communication", "Presentation"] },
+            ].map((group) => (
+              <div key={group.key} className="space-y-2">
+                <Label>{group.label}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {group.options.map((opt) => {
+                    const selected = (formResponses[group.key] || []).includes(opt);
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => {
+                          const current = formResponses[group.key] || [];
+                          const updated = selected ? current.filter((s) => s !== opt) : [...current, opt];
+                          setFormResponses({ ...formResponses, [group.key]: updated });
+                        }}
+                        className={`rounded-base border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
+                          selected
+                            ? "bg-main text-main-foreground border-border shadow-neo-sm"
+                            : "bg-card text-muted-foreground border-border hover:bg-muted"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Commitment + Consent */}
+            <div className="space-y-3 border-t border-border pt-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formResponses.attendanceCommitment || false}
+                  onChange={(e) => setFormResponses({ ...formResponses, attendanceCommitment: e.target.checked })}
+                  className="mt-1 h-4 w-4 rounded border-2 border-border"
+                />
+                <span className="text-sm text-foreground">I commit to attending the full hackathon and all required sessions</span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formResponses.consentDataSharing || false}
+                  onChange={(e) => setFormResponses({ ...formResponses, consentDataSharing: e.target.checked })}
+                  className="mt-1 h-4 w-4 rounded border-2 border-border"
+                />
+                <span className="text-sm text-foreground">I agree to share my profile data with hackathon sponsors</span>
+              </label>
+            </div>
+
+            {/* Project idea (optional) */}
+            <div className="space-y-2">
+              <Label>Project Idea (optional)</Label>
+              <Textarea
+                value={formResponses.projectIdea || ""}
+                onChange={(e) => setFormResponses({ ...formResponses, projectIdea: e.target.value })}
+                placeholder="Briefly describe your project idea if you have one..."
+                rows={3}
+              />
+            </div>
+          </div>
+
           {/* Custom fields from hackathon settings */}
           {customFields.map((field) => {
             const key = field.id || field.name;

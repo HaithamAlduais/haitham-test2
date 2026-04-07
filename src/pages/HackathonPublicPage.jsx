@@ -7,6 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Users, Trophy, Target, ArrowLeft } from "lucide-react";
 
+function CountdownTimer({ targetDate, label }) {
+  const [timeLeft, setTimeLeft] = useState("");
+  useEffect(() => {
+    const calc = () => {
+      const diff = new Date(targetDate) - new Date();
+      if (diff <= 0) { setTimeLeft("Ended"); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setTimeLeft(`${d}d ${h}h ${m}m`);
+    };
+    calc();
+    const interval = setInterval(calc, 60000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+  return (
+    <div className="inline-flex items-center gap-2 rounded-base border-2 border-main bg-main/10 px-3 py-1.5 text-sm font-bold text-main">
+      <span>⏰</span> {label}: {timeLeft}
+    </div>
+  );
+}
+
 export default function HackathonPublicPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -107,6 +129,13 @@ export default function HackathonPublicPage() {
               </span>
             )}
           </div>
+
+          {/* Countdown */}
+          {schedule.submissionDeadline && new Date(schedule.submissionDeadline) > new Date() && (
+            <div className="mt-4">
+              <CountdownTimer targetDate={schedule.submissionDeadline} label="Submission deadline" />
+            </div>
+          )}
         </div>
       </header>
 
@@ -194,6 +223,61 @@ export default function HackathonPublicPage() {
             <h2 className="text-xl font-black mb-3">Rules & Code of Conduct</h2>
             <div className="rounded-base border-2 border-border p-4">
               <p className="text-foreground whitespace-pre-wrap">{hackathon.rules}</p>
+            </div>
+          </section>
+        )}
+
+        {/* Sponsors */}
+        {hackathon.sponsors?.length > 0 && (
+          <section>
+            <h2 className="text-xl font-black mb-4">Sponsors & Partners</h2>
+            <div className="flex flex-wrap gap-6 items-center justify-center">
+              {hackathon.sponsors.map((s, i) => (
+                <div key={i} className="text-center">
+                  {s.logoUrl ? (
+                    <img src={s.logoUrl} alt={s.name} className="h-12 object-contain mx-auto" />
+                  ) : (
+                    <div className="h-12 w-24 rounded-base border-2 border-border flex items-center justify-center text-xs font-bold text-muted-foreground bg-card">{s.name}</div>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1 capitalize">{s.tier}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Resources */}
+        {hackathon.resources?.length > 0 && (
+          <section>
+            <h2 className="text-xl font-black mb-4">Resources</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {hackathon.resources.map((r, i) => (
+                <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-base border-2 border-border p-3 hover:border-main transition-colors">
+                  <span className="text-lg">{r.type === "dataset" ? "📊" : r.type === "api_doc" ? "📖" : r.type === "tool" ? "🔧" : r.type === "credits" ? "💳" : "📄"}</span>
+                  <div>
+                    <p className="font-bold text-foreground text-sm">{r.title}</p>
+                    {r.description && <p className="text-xs text-muted-foreground">{r.description}</p>}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* FAQ */}
+        {hackathon.faq?.length > 0 && (
+          <section>
+            <h2 className="text-xl font-black mb-4">FAQ</h2>
+            <div className="space-y-3">
+              {hackathon.faq.map((item, i) => (
+                <details key={i} className="rounded-base border-2 border-border p-4 group">
+                  <summary className="font-bold text-foreground cursor-pointer list-none flex items-center justify-between">
+                    {item.question}
+                    <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground">{item.answer}</p>
+                </details>
+              ))}
             </div>
           </section>
         )}

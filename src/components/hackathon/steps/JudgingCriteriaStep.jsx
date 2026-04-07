@@ -111,6 +111,20 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
         </Button>
       </div>
 
+      {/* Popular Choice Voting Toggle */}
+      <div className="rounded-base border-2 border-border bg-card p-4 flex items-center justify-between">
+        <div>
+          <p className="font-bold text-foreground text-sm">Popular Choice Voting</p>
+          <p className="text-xs text-muted-foreground">Enable public voting after submission deadline. Community picks their favorite.</p>
+        </div>
+        <button
+          onClick={() => onChange({ enablePopularVote: !data.enablePopularVote })}
+          className={`w-12 h-7 rounded-full border-2 border-border transition-colors flex items-center ${data.enablePopularVote ? 'bg-main justify-end' : 'bg-muted justify-start'}`}
+        >
+          <div className="w-5 h-5 rounded-full bg-white border border-border mx-0.5" />
+        </button>
+      </div>
+
       <div className="flex justify-between">
         <Button variant="neutral" onClick={onBack}>← Back</Button>
         <Button onClick={onNext}>Next: Prizes →</Button>

@@ -2,6 +2,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Monitor, MapPin, Laptop } from "lucide-react";
+
+const FORMAT_OPTIONS = [
+  { value: "online", label: "Online", icon: Monitor },
+  { value: "in-person", label: "In-Person", icon: MapPin },
+  { value: "hybrid", label: "Hybrid", icon: Laptop },
+];
 
 export default function BasicInfoStep({ data, onChange, onNext }) {
   const canProceed = data.title.trim().length > 0;
@@ -34,6 +41,27 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
             onChange={(e) => onChange({ tagline: e.target.value })}
             placeholder="A short catchy phrase for your hackathon"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Format</Label>
+          <div className="flex gap-2">
+            {FORMAT_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onChange({ format: value })}
+                className={`flex items-center gap-2 rounded-base border-2 px-4 py-2 text-sm font-bold transition-colors ${
+                  (data.format || "online") === value
+                    ? "border-border bg-main text-main-foreground shadow-neo-sm"
+                    : "border-border bg-card text-foreground hover:bg-muted"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">

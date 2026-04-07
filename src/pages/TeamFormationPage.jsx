@@ -9,9 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Users, Plus, Copy } from "lucide-react";
 
-function TeamCard({ team }) {
-  const maxSize = 5;
+function TeamCard({ team, hackathonId, onRefresh }) {
+  const maxSize = team.memberCount >= 5 ? team.memberCount : 5;
   const spotsLeft = maxSize - (team.memberCount || 1);
+  const [requesting, setRequesting] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+
+  const handleRequestJoin = async () => {
+    setRequesting(true);
+    try {
+      await apiPost(`/api/events/${hackathonId}/teams/${team.id}/request`, { role: "member" });
+      setRequestSent(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   return (
     <div className="rounded-base border-2 border-border bg-card p-4 space-y-3">
@@ -25,9 +39,71 @@ function TeamCard({ team }) {
         <Users className="h-4 w-4" />
         {team.memberCount || 1} member{(team.memberCount || 1) > 1 ? "s" : ""}
       </div>
-      {team.track && (
-        <Badge variant="outline">{team.track}</Badge>
+      {/* Role status indicators */}
+      {team.roleCounts && (
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { key: "pm", label: "PM", icon: "📋" },
+            { key: "developer", label: "Dev", icon: "💻" },
+            { key: "designer", label: "Design", icon: "🎨" },
+          ].map((r) => {
+            const filled = (team.roleCounts?.[r.key] || 0) > 0;
+            return (
+              <span
+                key={r.key}
+                className={`inline-flex items-center gap-1 rounded-base border px-2 py-0.5 text-xs font-bold ${
+                  filled ? "border-main bg-main/10 text-main" : "border-border bg-muted text-muted-foreground"
+                }`}
+              >
+                {r.icon} {r.label} {filled ? "✓" : "—"}
+              </span>
+            );
+          })}
+        </div>
       )}
+      {team.track && <Badge variant="outline">{team.track}</Badge>}
+      {/* Request to Join button */}
+      {spotsLeft > 0 && team.isOpen && (
+        <div>
+          {requestSent ? (
+            <p className="text-xs text-main font-bold">Request sent! Waiting for captain.</p>
+          ) : (
+            <Button size="sm" variant="neutral" onClick={handleRequestJoin} disabled={requesting}>
+              {requesting ? "Sending..." : "Request to Join"}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ROLE_OPTIONS = [
+  { value: "pm", label: "Product Manager", icon: "📋" },
+  { value: "developer", label: "Developer", icon: "💻" },
+  { value: "designer", label: "Designer", icon: "🎨" },
+];
+
+function RoleSelector({ value, onChange }) {
+  return (
+    <div className="space-y-2">
+      <Label>Your Role</Label>
+      <div className="flex flex-wrap gap-2">
+        {ROLE_OPTIONS.map((r) => (
+          <button
+            key={r.value}
+            type="button"
+            onClick={() => onChange(r.value)}
+            className={`flex items-center gap-1.5 rounded-base border-2 px-3 py-1.5 text-sm font-bold transition-colors ${
+              value === r.value
+                ? "bg-main text-main-foreground border-border shadow-neo-sm"
+                : "bg-card text-muted-foreground border-border hover:bg-muted"
+            }`}
+          >
+            <span>{r.icon}</span> {r.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -45,9 +121,20 @@ export default function TeamFormationPage() {
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [createRole, setCreateRole] = useState("pm");
+  const [joinRole, setJoinRole] = useState("developer");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+
+  const refreshTeams = async (hId) => {
+    try {
+      const data = await apiGet(`/api/events/${hId}/teams`);
+      setTeams(data.data || []);
+    } catch {
+      /* no teams yet */
+    }
+  };
 
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
@@ -56,10 +143,7 @@ export default function TeamFormationPage() {
       .then((res) => res.json())
       .then(async (h) => {
         setHackathon(h);
-        try {
-          const data = await apiGet(`/api/events/${h.id}/teams`);
-          setTeams(data.data || []);
-        } catch { /* no teams yet */ }
+        await refreshTeams(h.id);
       })
       .catch(() => setError("Hackathon not found."))
       .finally(() => setLoading(false));
@@ -71,13 +155,11 @@ export default function TeamFormationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await apiPost(`/api/events/${hackathon.id}/teams`, { name: newTeamName });
+      const result = await apiPost(`/api/events/${hackathon.id}/teams`, { name: newTeamName, role: createRole });
       setMessage(`Team created! Share code: ${result.code}`);
       setShowCreateForm(false);
       setNewTeamName("");
-      // Refresh teams
-      const data = await apiGet(`/api/hackathons/${hackathon.id}/teams`);
-      setTeams(data.data || []);
+      await refreshTeams(hackathon.id);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -91,12 +173,11 @@ export default function TeamFormationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await apiPost(`/api/events/${hackathon.id}/teams/join`, { code: joinCode });
+      const result = await apiPost(`/api/events/${hackathon.id}/teams/join`, { code: joinCode, role: joinRole });
       setMessage(`Joined team: ${result.teamName}`);
       setShowJoinForm(false);
       setJoinCode("");
-      const data = await apiGet(`/api/hackathons/${hackathon.id}/teams`);
-      setTeams(data.data || []);
+      await refreshTeams(hackathon.id);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -159,6 +240,7 @@ export default function TeamFormationPage() {
                 placeholder="Enter team name"
               />
             </div>
+            <RoleSelector value={createRole} onChange={setCreateRole} />
             <div className="flex gap-2">
               <Button type="submit" disabled={submitting || !newTeamName.trim()}>
                 {submitting ? "Creating..." : "Create"}
@@ -184,6 +266,7 @@ export default function TeamFormationPage() {
                 maxLength={6}
               />
             </div>
+            <RoleSelector value={joinRole} onChange={setJoinRole} />
             <div className="flex gap-2">
               <Button type="submit" disabled={submitting || !joinCode.trim()}>
                 {submitting ? "Joining..." : "Join"}
@@ -200,7 +283,7 @@ export default function TeamFormationPage() {
         {teams.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {teams.map((team) => (
-              <TeamCard key={team.id} team={team} />
+              <TeamCard key={team.id} team={team} hackathonId={hackathon?.id} onRefresh={() => refreshTeams(hackathon?.id)} />
             ))}
           </div>
         ) : (

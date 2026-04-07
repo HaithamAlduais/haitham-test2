@@ -59,6 +59,9 @@ const INITIAL_DATA = {
   resources: [],
   branding: { logoUrl: "", bannerUrl: "", primaryColor: "#7C3AED", secondaryColor: "#00D4AA", hashtag: "" },
   sponsors: [],
+  format: "online",
+  faq: [],
+  enablePopularVote: false,
   isPublic: true,
 };
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Palette, Wand2 } from "lucide-react";
+import { Palette, Wand2, Upload } from "lucide-react";
 import PageBuilder from "@/components/hackathon/PageBuilder";
 
 const DEFAULT_BRANDING = {
@@ -19,6 +19,30 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
 
   const updateBranding = (partial) => {
     onChange({ branding: { ...branding, ...partial } });
+  };
+
+  const handleUpload = async (field, accept) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = accept;
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const { apiPost } = await import("@/utils/apiClient");
+        const { uploadUrl, downloadURL } = await apiPost("/api/upload/presigned-url", {
+          fileName: file.name,
+          contentType: file.type,
+          fileType: "hackathons",
+          fileId: "branding",
+        });
+        await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+        onChange({ branding: { ...branding, [field]: downloadURL } });
+      } catch (err) {
+        console.error("Upload error:", err);
+      }
+    };
+    input.click();
   };
 
   const handleHashtagChange = (value) => {
@@ -41,21 +65,33 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="logoUrl">Logo URL</Label>
-            <Input
-              id="logoUrl"
-              value={branding.logoUrl}
-              onChange={(e) => updateBranding({ logoUrl: e.target.value })}
-              placeholder="https://example.com/logo.png"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="logoUrl"
+                value={branding.logoUrl}
+                onChange={(e) => updateBranding({ logoUrl: e.target.value })}
+                placeholder="https://example.com/logo.png"
+                className="flex-1"
+              />
+              <Button type="button" variant="neutral" size="sm" onClick={() => handleUpload("logoUrl", "image/*")}>
+                <Upload className="h-4 w-4" /> Upload
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="bannerUrl">Banner URL</Label>
-            <Input
-              id="bannerUrl"
-              value={branding.bannerUrl}
-              onChange={(e) => updateBranding({ bannerUrl: e.target.value })}
-              placeholder="https://example.com/banner.png"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="bannerUrl"
+                value={branding.bannerUrl}
+                onChange={(e) => updateBranding({ bannerUrl: e.target.value })}
+                placeholder="https://example.com/banner.png"
+                className="flex-1"
+              />
+              <Button type="button" variant="neutral" size="sm" onClick={() => handleUpload("bannerUrl", "image/*")}>
+                <Upload className="h-4 w-4" /> Upload
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -150,6 +186,30 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
           )}
         </div>
       )}
+
+      {/* Social Share Preview */}
+      <div className="space-y-2">
+        <Label>Social Share Preview</Label>
+        <div className="rounded-base border-2 border-border p-4 text-center" style={{ background: branding.primaryColor || "#7C3AED" }}>
+          <p className="text-white font-black text-lg">{data.title || "Your Hackathon"}</p>
+          <p className="text-white/80 text-sm">{data.tagline || "Tagline"}</p>
+          <p className="text-white/60 text-xs mt-2">ramsha.net</p>
+        </div>
+        <p className="text-xs text-muted-foreground">This preview shows how your hackathon appears when shared on social media.</p>
+      </div>
+
+      {/* Embed Banner Code */}
+      <div className="space-y-2">
+        <Label>Embed Banner Code</Label>
+        <div className="rounded-base border-2 border-border bg-card p-3">
+          <code className="text-xs text-muted-foreground break-all">
+            {`<a href="https://ramsha.net/hackathon/${data.slug || 'your-hackathon'}"><img src="${branding.bannerUrl || 'https://ramsha.net/banner.png'}" alt="${data.title}" style="max-width:100%"></a>`}
+          </code>
+        </div>
+        <Button variant="neutral" size="sm" onClick={() => navigator.clipboard?.writeText(`<a href="https://ramsha.net/hackathon/${data.slug || 'your-hackathon'}"><img src="${branding.bannerUrl || 'https://ramsha.net/banner.png'}" alt="${data.title}" style="max-width:100%"></a>`)}>
+          Copy Embed Code
+        </Button>
+      </div>
 
       {/* AI Page Builder launcher */}
       <div className="rounded-base border-2 border-dashed border-border p-4 text-center">

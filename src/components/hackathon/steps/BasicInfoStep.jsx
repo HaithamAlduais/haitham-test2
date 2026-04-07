@@ -7,7 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 export default function BasicInfoStep({ data, onChange, onNext }) {
   const { t, language } = useLanguage();
-  const canProceed = data.title.trim().length > 0;
+  const canProceed = true; // All fields optional — only required on publish
   const isRTL = language === "ar";
 
   const location = data.location || { name: "", address: "" };

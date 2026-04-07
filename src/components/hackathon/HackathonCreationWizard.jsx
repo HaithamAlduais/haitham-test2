@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { apiPost } from "@/utils/apiClient";
 import { useLanguage } from "@/context/LanguageContext";
+import { auth } from "@/firebase";
+import { Upload, FileText, Sparkles, SkipForward } from "lucide-react";
 import BasicInfoStep from "./steps/BasicInfoStep";
 import ScheduleStep from "./steps/ScheduleStep";
 import AIScreeningStep from "./steps/AIScreeningStep";
@@ -73,6 +75,10 @@ const INITIAL_DATA = {
 export default function HackathonCreationWizard({ onClose }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [showUpload, setShowUpload] = useState(true); // Pre-step: file upload
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const fileInputRef = useRef(null);
   const [step, setStep] = useState(0);
   const [data, setData] = useState(INITIAL_DATA);
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +88,67 @@ export default function HackathonCreationWizard({ onClose }) {
   const updateData = (partial) => setData((prev) => ({ ...prev, ...partial }));
   const next = () => setStep((s) => Math.min(s + 1, STEP_KEYS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
+
+  // Handle file upload → Gemini extraction → auto-fill wizard
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const token = await auth.currentUser?.getIdToken(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/ai/extract-from-file", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Upload failed");
+      }
+
+      const result = await res.json();
+      if (result.wizardData) {
+        // Merge extracted data into wizard (don't overwrite existing non-empty fields)
+        const extracted = result.wizardData;
+        const merged = { ...INITIAL_DATA };
+
+        // Strings
+        for (const key of ["title", "tagline", "description", "targetAudience", "contactEmail", "rules", "format"]) {
+          if (extracted[key]) merged[key] = extracted[key];
+        }
+
+        // Objects
+        if (extracted.location?.name) merged.location = extracted.location;
+        if (extracted.schedule) merged.schedule = { ...INITIAL_DATA.schedule, ...extracted.schedule };
+        if (extracted.settings) merged.settings = { ...INITIAL_DATA.settings, ...extracted.settings };
+        if (extracted.branding) merged.branding = { ...INITIAL_DATA.branding, ...extracted.branding };
+
+        // Arrays
+        for (const key of ["tracks", "prizes", "judgingCriteria", "sponsors", "faq"]) {
+          if (Array.isArray(extracted[key]) && extracted[key].length > 0) {
+            merged[key] = extracted[key].map(item => ({ ...item, id: crypto.randomUUID() }));
+          }
+        }
+
+        // Save file URL
+        if (result.fileUrl) merged.sourceFileUrl = result.fileUrl;
+
+        setData(merged);
+      }
+
+      setShowUpload(false);
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (publish, extraData) => {
     setError(null);
@@ -99,6 +166,72 @@ export default function HackathonCreationWizard({ onClose }) {
       setSubmitting(false);
     }
   };
+
+  // ── Pre-step: File Upload ───────────────────────────────────────────────
+  if (showUpload) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
+        <header className="h-16 border-b-2 border-border bg-secondary-background flex items-center justify-between px-6 md:px-12 shrink-0">
+          <h1 className="font-heading font-black text-lg text-foreground">{t("createHackathon")}</h1>
+          <button onClick={onClose} className="font-mono font-bold text-lg text-muted-foreground hover:text-destructive transition-colors">✕</button>
+        </header>
+
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-lg w-full space-y-8 text-center">
+            <div>
+              <div className="mx-auto w-20 h-20 rounded-full border-2 border-border bg-main/10 flex items-center justify-center mb-4">
+                <Sparkles className="h-10 w-10 text-main" />
+              </div>
+              <h2 className="text-2xl font-black text-foreground">
+                {t("uploadFileTitle") || "ابدأ بسرعة مع الذكاء الاصطناعي"}
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                {t("uploadFileDesc") || "ارفع ملف (PDF, Word, PowerPoint) يحتوي على معلومات الهاكاثون وسيقوم الذكاء الاصطناعي بملء جميع الحقول تلقائياً"}
+              </p>
+            </div>
+
+            {/* Upload area */}
+            <div
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              className={`rounded-base border-2 border-dashed p-8 cursor-pointer transition-colors ${
+                uploading ? "border-main bg-main/5" : "border-border hover:border-main hover:bg-main/5"
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.pptx,.txt"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              {uploading ? (
+                <div className="space-y-3">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-main border-t-transparent" />
+                  <p className="text-sm font-bold text-main">{t("extracting") || "جاري استخراج المعلومات بالذكاء الاصطناعي..."}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Upload className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <p className="font-bold text-foreground">{t("dropFile") || "اضغط لرفع ملف"}</p>
+                  <p className="text-xs text-muted-foreground">PDF, DOCX, PPTX, TXT — {t("maxSize") || "حد أقصى ٢٠ ميجابايت"}</p>
+                </div>
+              )}
+            </div>
+
+            {uploadError && (
+              <div className="rounded-base border border-destructive bg-destructive/10 p-3 text-sm text-destructive">{uploadError}</div>
+            )}
+
+            {/* Skip button */}
+            <Button variant="neutral" size="lg" onClick={() => setShowUpload(false)} disabled={uploading} className="gap-2">
+              <SkipForward className="h-4 w-4" />
+              {t("skipUpload") || "تخطي وابدأ من الصفر"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     const shareUrl = `${window.location.origin}/hackathon/${success.slug}`;

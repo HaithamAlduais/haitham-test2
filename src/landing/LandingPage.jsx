@@ -15,12 +15,13 @@ import HackathonMarketplace from "@/components/hackathon/HackathonMarketplace";
 
 export default function LandingPage() {
   const { lang } = useLanguage();
-  const { setMode } = useTheme();
+  const { setMode, setTheme } = useTheme();
   const L = getLandingCopy(lang);
 
   useLayoutEffect(() => {
     setMode("participant");
-  }, [setMode]);
+    setTheme("light");
+  }, [setMode, setTheme]);
 
   return (
     <ReactLenis root>

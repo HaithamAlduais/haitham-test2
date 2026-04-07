@@ -31,16 +31,16 @@ Built 3 new public-facing pages: the hackathon detail page (shows full info incl
 ## Phase 2: AI & Organizer Tools
 
 ### Step 2.1 — Organizer Hackathon Dashboard
-_(in progress)_
+Built the organizer's management hub for hackathons. The HackathonsPage lists all hackathons with status badges, registration/team counts, and deadlines. The ManageHackathonPage provides a tabbed interface (Registrations, Teams, Settings) with animated stat cards, a full registration data table supporting select-all and bulk approve/reject, a team grid with invite codes, and a status progression button that moves the hackathon through its lifecycle. Added "Hackathons" to the dashboard sidebar navigation.
 
 ### Step 2.2 — Submission System
-_(pending)_
+Built the project submission workflow with a two-step process: save as draft first, then finalize when ready. The backend enforces deadlines, prevents duplicate team submissions, and blocks edits after evaluation. The frontend provides a clean form for project name, description, GitHub/demo/video URLs, and tech stack. The public hackathon page shows a "Submit Project" button when the hackathon is in active status.
 
-### Step 2.3 — AI Screening Agent
-_(pending)_
+### Step 2.3 — Judging System
+Built the criteria-based scoring system where judges evaluate submissions using slider controls per criterion (weighted by the organizer's defined criteria). Scores are auto-calculated as weighted averages and the submission's total score is updated whenever any judge submits. The Judge Portal features a split-view layout: submission list on the left, scoring form on the right with links to GitHub/demo/video. Organizers can view all scores, and a leaderboard endpoint ranks submissions by total score.
 
 ### Step 2.4 — Communication System
-_(pending)_
+Built the announcement system using Firestore subcollections. Organizers can create announcements with title, content, and channel (platform/email/discord/telegram). Supports scheduled announcements for future delivery. All authenticated users (participants, judges) can read announcements for their hackathons.
 
 ### Step 2.5 — Workshop Management
-_(pending)_
+Built the workshop scheduling system. Organizers create workshops with title, description, date/time, duration, platform (Zoom/Discord), meeting link, and resource attachments. Participants can RSVP to workshops. All authenticated hackathon members can view the workshop schedule.

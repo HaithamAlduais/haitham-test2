@@ -5,7 +5,7 @@
  * Supports black (light mode) and white (dark mode) variants.
  *
  * Place your logo files at:
- * - public/ramsha-logo-black.jpg (for light backgrounds)
+ * - public/ramsha-logo-black.png (for light backgrounds)
  * - public/ramsha-logo-white.png (for dark backgrounds)
  */
 
@@ -13,7 +13,7 @@ export default function RamshaLogo({ variant = "auto", size = 32, className = ""
   // Auto-detect: use CSS filter to invert for dark mode
   return (
     <img
-      src="/ramsha-logo-black.jpg"
+      src="/ramsha-logo-black.png"
       alt="Ramsha"
       width={size}
       height={size}

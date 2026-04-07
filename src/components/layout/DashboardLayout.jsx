@@ -48,7 +48,7 @@ export function DashboardLayout({ children, activePath }) {
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-e-2 border-border bg-secondary-background">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-6">
-          <img src="/ramsha-logo-black.jpg" alt="Ramsha" className="h-9 w-9 object-contain dark:invert" />
+          <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-9 w-9 object-contain dark:invert" />
           <span className="font-heading text-xl font-black tracking-tight">Ramsha</span>
         </div>
 

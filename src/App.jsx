@@ -36,6 +36,7 @@ import SurveyResponsePage from './pages/SurveyResponsePage'
 import EventLegacyPage from './pages/EventLegacyPage'
 import WorkbackDashboardPage from './pages/WorkbackDashboardPage'
 import OfficeHoursPage from './pages/OfficeHoursPage'
+import PageBuilderPage from './pages/PageBuilderPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -174,6 +175,15 @@ function App() {
         element={
           <PrivateRoute requiredRole="Organizer">
             <ManageHackathonPage />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/hackathons/:id/page-builder"
+        element={
+          <PrivateRoute requiredRole="Organizer">
+            <PageBuilderPage />
           </PrivateRoute>
         }
       />

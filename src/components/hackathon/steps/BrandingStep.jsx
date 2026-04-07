@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Palette } from "lucide-react";
+import { Palette, Wand2 } from "lucide-react";
+import PageBuilder from "@/components/hackathon/PageBuilder";
 
 const DEFAULT_BRANDING = {
   logoUrl: "",
@@ -12,6 +14,7 @@ const DEFAULT_BRANDING = {
 };
 
 export default function BrandingStep({ data, onChange, onNext, onBack }) {
+  const [showBuilder, setShowBuilder] = useState(false);
   const branding = { ...DEFAULT_BRANDING, ...data.branding };
 
   const updateBranding = (partial) => {
@@ -146,6 +149,25 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
             <p className="text-sm font-bold text-main">{branding.hashtag}</p>
           )}
         </div>
+      )}
+
+      {/* AI Page Builder launcher */}
+      <div className="rounded-base border-2 border-dashed border-border p-4 text-center">
+        <p className="text-sm text-muted-foreground mb-3">Want full control? Design your hackathon page with our AI-powered builder.</p>
+        <Button variant="neutral" onClick={() => setShowBuilder(true)}>
+          <Wand2 className="h-4 w-4" /> Launch AI Page Builder
+        </Button>
+      </div>
+
+      {showBuilder && (
+        <PageBuilder
+          hackathonData={data}
+          onSave={(pageData) => {
+            onChange(pageData);
+            setShowBuilder(false);
+          }}
+          onClose={() => setShowBuilder(false)}
+        />
       )}
 
       <div className="flex justify-between">

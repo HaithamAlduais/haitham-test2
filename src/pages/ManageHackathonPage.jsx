@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles, Download, BarChart3 } from "lucide-react";
+import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles, Download, BarChart3, Layout } from "lucide-react";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 const STATUS_VARIANT = {
@@ -171,6 +171,9 @@ export default function ManageHackathonPage() {
             )}
           </div>
           <div className="flex gap-2">
+            <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/page-builder`)}>
+              <Layout className="h-4 w-4" /> Page Builder
+            </Button>
             <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/analytics`)}>
               <BarChart3 className="h-4 w-4" /> Analytics
             </Button>

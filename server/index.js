@@ -6,25 +6,21 @@ const admin = require('firebase-admin');
 
 // ── Initialize Firebase Admin SDK ───────────────────────────────────────────
 const path = require('path');
-const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
-  || path.join(__dirname, 'serviceAccountKey.json');
 
-let serviceAccount;
-try {
-  serviceAccount = require(serviceAccountPath);
-} catch (err) {
-  console.error(
-    `FATAL: Could not load service account key from "${serviceAccountPath}". ` +
-    `Ensure the file exists. Error: ${err.message}`
-  );
-  process.exit(1);
+if (!admin.apps.length) {
+  try {
+    // Try loading service account key (local dev)
+    const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+      || path.join(__dirname, 'serviceAccountKey.json');
+    const serviceAccount = require(serviceAccountPath);
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    console.log(`Firebase Admin initialized for project: ${serviceAccount.project_id}`);
+  } catch {
+    // In Cloud Functions / production — use Application Default Credentials
+    admin.initializeApp();
+    console.log('Firebase Admin initialized with default credentials');
+  }
 }
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-console.log(`Firebase Admin initialized for project: ${serviceAccount.project_id}`);
 
 const app = express();
 

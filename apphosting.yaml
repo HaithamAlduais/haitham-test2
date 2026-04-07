@@ -1,0 +1,21 @@
+runConfig:
+  runtime: nodejs20
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 3
+
+env:
+  - variable: PORT
+    value: "5001"
+  - variable: CORS_ORIGIN
+    value: "https://ramsha.net,https://ramsha-cd619.web.app,https://ramsha-cd619.firebaseapp.com"
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+  - variable: DISCORD_BOT_TOKEN
+    secret: DISCORD_BOT_TOKEN
+  - variable: DISCORD_APPLICATION_ID
+    value: "1491081792621641848"

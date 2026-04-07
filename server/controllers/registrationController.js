@@ -2,21 +2,29 @@ const admin = require("firebase-admin");
 const { REGISTRATION_STATUS } = require("../lib/constants");
 
 const db = () => admin.firestore();
+const eventsCol = () => db().collection("events");
 const hackathonsCol = () => db().collection("hackathons");
 
-function registrationsCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("registrations");
+/** Try events collection first, fall back to hackathons for backward compat. */
+async function getEventDoc(id) {
+  let snap = await eventsCol().doc(id).get();
+  if (snap.exists) return snap;
+  return hackathonsCol().doc(id).get();
+}
+
+function registrationsCol(eventId) {
+  return eventsCol().doc(eventId).collection("registrations");
 }
 
 // ── POST /api/hackathons/:id/registrations ──────────────────────────────────
 
 async function submitRegistration(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { formResponses } = req.body;
 
     // Check hackathon exists and is accepting registrations
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) {
       return res.status(404).json({ error: "Hackathon not found." });
     }
@@ -56,8 +64,13 @@ async function submitRegistration(req, res) {
     const docRef = await registrationsCol(id).add(regData);
 
     // Increment registration count
-    await hackathonsCol().doc(id).update({
+    await eventsCol().doc(id).update({
       registrationCount: admin.firestore.FieldValue.increment(1),
+    }).catch(() => {
+      // Fall back to hackathons collection
+      return hackathonsCol().doc(id).update({
+        registrationCount: admin.firestore.FieldValue.increment(1),
+      });
     });
 
     return res.status(201).json({ id: docRef.id, ...regData, createdAt: new Date().toISOString() });
@@ -71,7 +84,7 @@ async function submitRegistration(req, res) {
 
 async function getMyRegistration(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const snap = await registrationsCol(id)
       .where("userId", "==", req.uid)
       .limit(1)
@@ -93,11 +106,11 @@ async function getMyRegistration(req, res) {
 
 async function listRegistrations(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { status: filterStatus, limit: limitStr } = req.query;
 
     // Verify ownership
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });
@@ -131,7 +144,7 @@ async function updateRegistrationStatus(req, res) {
     }
 
     // Verify ownership
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });
@@ -153,7 +166,7 @@ async function updateRegistrationStatus(req, res) {
 
 async function bulkUpdateStatus(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { registrationIds, status: newStatus } = req.body;
 
     if (!Array.isArray(registrationIds) || registrationIds.length === 0) {
@@ -164,7 +177,7 @@ async function bulkUpdateStatus(req, res) {
     }
 
     // Verify ownership
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });

@@ -2,24 +2,31 @@ const admin = require("firebase-admin");
 const { SUBMISSION_STATUS } = require("../lib/constants");
 
 const db = () => admin.firestore();
+const eventsCol = () => db().collection("events");
 const hackathonsCol = () => db().collection("hackathons");
 
-function submissionsCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("submissions");
+async function getEventDoc(id) {
+  let snap = await eventsCol().doc(id).get();
+  if (snap.exists) return snap;
+  return hackathonsCol().doc(id).get();
+}
+
+function submissionsCol(eventId) {
+  return eventsCol().doc(eventId).collection("submissions");
 }
 
 // ── POST /api/hackathons/:id/submissions ────────────────────────────────────
 
 async function createSubmission(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { teamId, projectName, description, githubUrl, demoUrl, videoUrl, techStack } = req.body;
 
     if (!projectName || typeof projectName !== "string" || !projectName.trim()) {
       return res.status(400).json({ error: "Project name is required." });
     }
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
 
     const hackathon = hSnap.data();
@@ -139,7 +146,7 @@ async function finalizeSubmission(req, res) {
 
 async function getMySubmission(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const snap = await submissionsCol(id)
       .where("submitterId", "==", req.uid)
       .limit(1)
@@ -158,10 +165,10 @@ async function getMySubmission(req, res) {
 
 async function listSubmissions(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
 
     // Verify ownership
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });

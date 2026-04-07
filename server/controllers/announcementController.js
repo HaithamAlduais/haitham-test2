@@ -1,24 +1,31 @@
 const admin = require("firebase-admin");
 
 const db = () => admin.firestore();
+const eventsCol = () => db().collection("events");
 const hackathonsCol = () => db().collection("hackathons");
 
-function announcementsCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("announcements");
+async function getEventDoc(id) {
+  let snap = await eventsCol().doc(id).get();
+  if (snap.exists) return snap;
+  return hackathonsCol().doc(id).get();
+}
+
+function announcementsCol(eventId) {
+  return eventsCol().doc(eventId).collection("announcements");
 }
 
 // ── POST /api/hackathons/:id/announcements ──────────────────────────────────
 
 async function createAnnouncement(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { title, content, channel, scheduledAt } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: "Title and content are required." });
     }
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });
@@ -48,7 +55,7 @@ async function createAnnouncement(req, res) {
 
 async function listAnnouncements(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const snap = await announcementsCol(id)
       .orderBy("createdAt", "desc")
       .limit(50)
@@ -68,7 +75,7 @@ async function deleteAnnouncement(req, res) {
   try {
     const { id, annId } = req.params;
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });

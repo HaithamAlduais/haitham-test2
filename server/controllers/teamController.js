@@ -2,14 +2,21 @@ const admin = require("firebase-admin");
 const { TEAM_STATUS } = require("../lib/constants");
 
 const db = () => admin.firestore();
+const eventsCol = () => db().collection("events");
 const hackathonsCol = () => db().collection("hackathons");
 
-function teamsCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("teams");
+async function getEventDoc(id) {
+  let snap = await eventsCol().doc(id).get();
+  if (snap.exists) return snap;
+  return hackathonsCol().doc(id).get();
 }
 
-function membersCol(hackathonId, teamId) {
-  return teamsCol(hackathonId).doc(teamId).collection("members");
+function teamsCol(eventId) {
+  return eventsCol().doc(eventId).collection("teams");
+}
+
+function membersCol(eventId, teamId) {
+  return teamsCol(eventId).doc(teamId).collection("members");
 }
 
 function generateCode() {
@@ -20,14 +27,14 @@ function generateCode() {
 
 async function createTeam(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { name, track } = req.body;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return res.status(400).json({ error: "Team name is required." });
     }
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
 
     const now = admin.firestore.FieldValue.serverTimestamp();
@@ -55,9 +62,11 @@ async function createTeam(req, res) {
     });
 
     // Increment team count
-    await hackathonsCol().doc(id).update({
+    await eventsCol().doc(id).update({
       teamCount: admin.firestore.FieldValue.increment(1),
-    });
+    }).catch(() => hackathonsCol().doc(id).update({
+      teamCount: admin.firestore.FieldValue.increment(1),
+    }));
 
     return res.status(201).json({ id: docRef.id, ...teamData, code, createdAt: new Date().toISOString() });
   } catch (err) {
@@ -70,12 +79,12 @@ async function createTeam(req, res) {
 
 async function joinTeam(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { code, role } = req.body;
 
     if (!code) return res.status(400).json({ error: "Team code is required." });
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     const hackathon = hSnap.data();
 
@@ -124,7 +133,7 @@ async function joinTeam(req, res) {
 
 async function listTeams(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const snap = await teamsCol(id).orderBy("createdAt", "desc").limit(50).get();
     const teams = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     return res.json({ data: teams });
@@ -188,10 +197,10 @@ async function leaveTeam(req, res) {
 
 async function listAllTeamsAdmin(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
 
     // Verify ownership
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });

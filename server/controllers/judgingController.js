@@ -1,21 +1,28 @@
 const admin = require("firebase-admin");
 
 const db = () => admin.firestore();
+const eventsCol = () => db().collection("events");
 const hackathonsCol = () => db().collection("hackathons");
 
-function scoresCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("scores");
+async function getEventDoc(id) {
+  let snap = await eventsCol().doc(id).get();
+  if (snap.exists) return snap;
+  return hackathonsCol().doc(id).get();
 }
 
-function submissionsCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("submissions");
+function scoresCol(eventId) {
+  return eventsCol().doc(eventId).collection("scores");
+}
+
+function submissionsCol(eventId) {
+  return eventsCol().doc(eventId).collection("submissions");
 }
 
 // ── POST /api/hackathons/:id/scores ─────────────────────────────────────────
 
 async function submitScore(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { submissionId, criteriaScores, feedback } = req.body;
 
     if (!submissionId) return res.status(400).json({ error: "submissionId is required." });
@@ -23,7 +30,7 @@ async function submitScore(req, res) {
       return res.status(400).json({ error: "criteriaScores object is required." });
     }
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
 
     const hackathon = hSnap.data();
@@ -99,7 +106,7 @@ async function submitScore(req, res) {
 
 async function getMyScores(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const snap = await scoresCol(id)
       .where("judgeId", "==", req.uid)
       .get();
@@ -116,9 +123,9 @@ async function getMyScores(req, res) {
 
 async function listAllScores(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });
@@ -137,9 +144,9 @@ async function listAllScores(req, res) {
 
 async function getLeaderboard(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
 
     const snap = await submissionsCol(id)

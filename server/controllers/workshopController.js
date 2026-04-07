@@ -1,22 +1,29 @@
 const admin = require("firebase-admin");
 
 const db = () => admin.firestore();
+const eventsCol = () => db().collection("events");
 const hackathonsCol = () => db().collection("hackathons");
 
-function workshopsCol(hackathonId) {
-  return hackathonsCol().doc(hackathonId).collection("workshops");
+async function getEventDoc(id) {
+  let snap = await eventsCol().doc(id).get();
+  if (snap.exists) return snap;
+  return hackathonsCol().doc(id).get();
+}
+
+function workshopsCol(eventId) {
+  return eventsCol().doc(eventId).collection("workshops");
 }
 
 // ── POST /api/hackathons/:id/workshops ──────────────────────────────────────
 
 async function createWorkshop(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const { title, description, dateTime, durationMinutes, platform, meetingLink, resources } = req.body;
 
     if (!title) return res.status(400).json({ error: "Title is required." });
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });
@@ -48,7 +55,7 @@ async function createWorkshop(req, res) {
 
 async function listWorkshops(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params.eventId;
     const snap = await workshopsCol(id).orderBy("dateTime", "asc").get();
     const workshops = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     return res.json({ data: workshops });
@@ -65,7 +72,7 @@ async function updateWorkshop(req, res) {
     const { id, wId } = req.params;
     const updates = { ...req.body };
 
-    const hSnap = await hackathonsCol().doc(id).get();
+    const hSnap = await getEventDoc(id);
     if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
     if (hSnap.data().organizerId !== req.uid) {
       return res.status(403).json({ error: "You do not own this hackathon." });

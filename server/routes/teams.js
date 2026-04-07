@@ -11,6 +11,7 @@ const {
   leaveTeam,
   listAllTeamsAdmin,
   updateTeamTags,
+  updateTeamStatus,
 } = require("../controllers/teamController");
 
 const router = express.Router({ mergeParams: true });
@@ -30,5 +31,6 @@ router.get("/:teamId/requests", requireRole("Participant", "Organizer"), listJoi
 // Organizer endpoints
 router.get("/admin/all", requireRole("Organizer"), listAllTeamsAdmin);
 router.patch("/:teamId/tags", requireRole("Organizer"), updateTeamTags);
+router.patch("/:teamId/status", requireRole("Organizer"), updateTeamStatus);
 
 module.exports = router;

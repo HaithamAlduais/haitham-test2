@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { REGISTRATION_STATUS } = require("../lib/constants");
+const { onRegistrationSubmitted, onRegistrationAccepted, onRegistrationRejected } = require("../services/automationService");
 
 const db = () => admin.firestore();
 const eventsCol = () => db().collection("events");
@@ -62,6 +63,9 @@ async function submitRegistration(req, res) {
     };
 
     const docRef = await registrationsCol(id).add(regData);
+
+    // AUTOMATION: send confirmation email + notification
+    onRegistrationSubmitted({ hackathon, registration: regData, hackathonId: id }).catch(console.warn);
 
     // Increment registration count
     await eventsCol().doc(id).update({
@@ -176,6 +180,17 @@ async function updateRegistrationStatus(req, res) {
 
     await registrationsCol(id).doc(regId).update(updatePayload);
 
+    // AUTOMATION: trigger email + notification based on new status
+    const regSnap = await registrationsCol(id).doc(regId).get();
+    const regData = regSnap.exists ? regSnap.data() : {};
+    const hackathon = hSnap.data();
+
+    if (newStatus === REGISTRATION_STATUS.ACCEPTED) {
+      onRegistrationAccepted({ hackathon, registration: regData, hackathonId: id }).catch(console.warn);
+    } else if (newStatus === REGISTRATION_STATUS.REJECTED) {
+      onRegistrationRejected({ hackathon, registration: regData, hackathonId: id }).catch(console.warn);
+    }
+
     return res.json({ message: `Registration status updated to "${newStatus}".` });
   } catch (err) {
     console.error("updateRegistrationStatus error:", err);
@@ -210,6 +225,19 @@ async function bulkUpdateStatus(req, res) {
       batch.update(registrationsCol(id).doc(regId), { status: newStatus, updatedAt: now });
     }
     await batch.commit();
+
+    // AUTOMATION: trigger emails for all updated registrations
+    const hackathon = hSnap.data();
+    for (const regId of registrationIds) {
+      const regSnap = await registrationsCol(id).doc(regId).get();
+      if (!regSnap.exists) continue;
+      const regData = regSnap.data();
+      if (newStatus === REGISTRATION_STATUS.ACCEPTED) {
+        onRegistrationAccepted({ hackathon, registration: regData, hackathonId: id }).catch(console.warn);
+      } else if (newStatus === REGISTRATION_STATUS.REJECTED) {
+        onRegistrationRejected({ hackathon, registration: regData, hackathonId: id }).catch(console.warn);
+      }
+    }
 
     return res.json({ message: `${registrationIds.length} registrations updated to "${newStatus}".` });
   } catch (err) {

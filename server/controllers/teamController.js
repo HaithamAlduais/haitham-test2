@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { TEAM_STATUS, TEAM_ROLES, JOIN_REQUEST_STATUS } = require("../lib/constants");
+const { onTeamAccepted } = require("../services/automationService");
 
 const db = () => admin.firestore();
 const eventsCol = () => db().collection("events");
@@ -440,6 +441,47 @@ async function updateTeamTags(req, res) {
   }
 }
 
+// ── PATCH /api/hackathons/:id/teams/:teamId/status ──────────────────────────
+// Organizer updates team status (accept/reject) — triggers automation
+
+async function updateTeamStatus(req, res) {
+  try {
+    const { id, teamId } = req.params;
+    const { status: newStatus } = req.body;
+
+    const validStatuses = Object.values(TEAM_STATUS);
+    if (!validStatuses.includes(newStatus)) {
+      return res.status(400).json({ error: `Invalid status. Must be: ${validStatuses.join(", ")}` });
+    }
+
+    const hSnap = await getEventDoc(id);
+    if (!hSnap.exists) return res.status(404).json({ error: "Hackathon not found." });
+    if (hSnap.data().organizerId !== req.uid) {
+      return res.status(403).json({ error: "Not authorized." });
+    }
+
+    const teamSnap = await teamsCol(id).doc(teamId).get();
+    if (!teamSnap.exists) return res.status(404).json({ error: "Team not found." });
+
+    await teamsCol(id).doc(teamId).update({
+      status: newStatus,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // AUTOMATION: on acceptance → Discord channel + emails to all members
+    if (newStatus === TEAM_STATUS.ACCEPTED) {
+      const hackathon = hSnap.data();
+      const team = teamSnap.data();
+      onTeamAccepted({ hackathon, team, teamId, hackathonId: id }).catch(console.warn);
+    }
+
+    return res.json({ message: `Team status updated to "${newStatus}".` });
+  } catch (err) {
+    console.error("updateTeamStatus error:", err);
+    return res.status(500).json({ error: "Failed to update team status." });
+  }
+}
+
 module.exports = {
   createTeam,
   joinTeam,
@@ -451,4 +493,5 @@ module.exports = {
   leaveTeam,
   listAllTeamsAdmin,
   updateTeamTags,
+  updateTeamStatus,
 };

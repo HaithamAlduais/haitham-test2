@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { SUBMISSION_STATUS } = require("../lib/constants");
+const { onSubmissionFinalized } = require("../services/automationService");
 
 const db = () => admin.firestore();
 const eventsCol = () => db().collection("events");
@@ -134,6 +135,12 @@ async function finalizeSubmission(req, res) {
       submittedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
+    // AUTOMATION: notify organizer of new submission
+    const hSnap = await getEventDoc(id);
+    if (hSnap.exists) {
+      onSubmissionFinalized({ hackathon: hSnap.data(), submission: sub, hackathonId: id }).catch(console.warn);
+    }
 
     return res.json({ message: "Submission finalized." });
   } catch (err) {

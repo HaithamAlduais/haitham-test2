@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const { slugify } = require("../utils/slugify");
 const { HACKATHON_STATUS } = require("../lib/constants");
+const { onHackathonPublished } = require("../services/automationService");
 
 const db = () => admin.firestore();
 const hackathonsCol = () => db().collection("hackathons");
@@ -219,6 +220,17 @@ async function updateHackathonStatus(req, res) {
       status: newStatus,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
+    // Also update events collection
+    await db().collection("events").doc(id).update({
+      status: newStatus,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+
+    // AUTOMATION: trigger actions based on new status
+    if (newStatus === HACKATHON_STATUS.PUBLISHED) {
+      onHackathonPublished({ hackathon: { ...data, status: newStatus }, hackathonId: id }).catch(console.warn);
+    }
 
     return res.json({ message: `Status updated to "${newStatus}".` });
   } catch (err) {

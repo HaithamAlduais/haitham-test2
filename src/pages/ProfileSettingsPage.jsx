@@ -4,6 +4,7 @@ import { useLanguage } from "../context/LanguageContext";
 import ProfileInfoSection from "../components/settings/ProfileInfoSection";
 import ChangePasswordSection from "../components/settings/ChangePasswordSection";
 import DeleteAccountSection from "../components/settings/DeleteAccountSection";
+import ExtendedProfileSection from "../components/settings/ExtendedProfileSection";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 const ProfileSettingsPage = () => {
@@ -28,6 +29,8 @@ const ProfileSettingsPage = () => {
         </h1>
 
         <ProfileInfoSection showToast={showToast} />
+
+        <ExtendedProfileSection showToast={showToast} />
 
         {isPasswordProvider && <ChangePasswordSection showToast={showToast} />}
 

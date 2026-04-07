@@ -18,7 +18,17 @@ async function getProfile(req, res) {
       email: req.email,
       displayName: data.displayName || null,
       role: data.role,
+      roles: data.roles || [],
       avatarUrl: data.avatarUrl || null,
+      bio: data.bio || null,
+      phone: data.phone || null,
+      location: data.location || null,
+      skills: data.skills || [],
+      interests: data.interests || [],
+      education: data.education || null,
+      professional: data.professional || null,
+      social: data.social || null,
+      profileCompleteness: data.profileCompleteness || 0,
       createdAt: data.createdAt || null,
     });
   } catch (err) {
@@ -29,28 +39,56 @@ async function getProfile(req, res) {
 
 // ── PATCH /api/users/profile ────────────────────────────────────────────────
 
+/** Allowed top-level string fields. */
+const STRING_FIELDS = ["displayName", "bio", "phone", "location"];
+
+/** Compute profile completeness percentage (0-100). */
+function computeCompleteness(data) {
+  const checks = [
+    !!data.displayName,
+    !!data.bio,
+    Array.isArray(data.skills) && data.skills.length > 0,
+    !!data.education?.institution,
+    !!data.professional?.title,
+    !!data.social?.github || !!data.social?.linkedin,
+    !!data.avatarUrl,
+    !!data.phone,
+  ];
+  const filled = checks.filter(Boolean).length;
+  return Math.round((filled / checks.length) * 100);
+}
+
 async function updateProfile(req, res) {
   try {
-    const { displayName } = req.body;
-
-    if (displayName !== undefined) {
-      if (typeof displayName !== "string" || displayName.trim().length === 0) {
-        return res.status(400).json({ error: "Display name must be a non-empty string." });
-      }
-      if (displayName.trim().length > 255) {
-        return res.status(400).json({ error: "Display name must be 255 characters or fewer." });
-      }
-    }
+    const { displayName, bio, phone, location, skills, interests, education, professional, social } = req.body;
 
     const updates = {};
-    if (displayName !== undefined) {
-      updates.displayName = displayName.trim();
+
+    // String fields
+    for (const field of STRING_FIELDS) {
+      const val = req.body[field];
+      if (val !== undefined) {
+        updates[field] = typeof val === "string" ? val.trim() : "";
+      }
     }
+
+    // Array fields
+    if (skills !== undefined) updates.skills = Array.isArray(skills) ? skills : [];
+    if (interests !== undefined) updates.interests = Array.isArray(interests) ? interests : [];
+
+    // Object fields
+    if (education !== undefined) updates.education = education || {};
+    if (professional !== undefined) updates.professional = professional || {};
+    if (social !== undefined) updates.social = social || {};
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: "No valid fields to update." });
     }
 
+    // Fetch current doc to merge and compute completeness
+    const currentDoc = await usersCol().doc(req.uid).get();
+    const merged = { ...(currentDoc.exists ? currentDoc.data() : {}), ...updates };
+    updates.profileCompleteness = computeCompleteness(merged);
     updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
 
     await usersCol().doc(req.uid).update(updates);

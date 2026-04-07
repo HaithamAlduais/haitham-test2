@@ -83,12 +83,13 @@ export default function HackathonCreationWizard({ onClose }) {
   const next = () => setStep((s) => Math.min(s + 1, STEP_KEYS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  const handleSubmit = async (publish) => {
+  const handleSubmit = async (publish, extraData) => {
     setError(null);
     setSubmitting(true);
     try {
       const result = await apiPost("/api/hackathons", {
         ...data,
+        ...(extraData || {}),
         isPublic: publish,
       });
       setSuccess({ id: result.id, slug: result.slug, isPublic: publish });
@@ -152,8 +153,8 @@ export default function HackathonCreationWizard({ onClose }) {
     <ReviewPublishStep
       data={data}
       onBack={back}
-      onPublish={() => handleSubmit(true)}
-      onSaveDraft={() => handleSubmit(false)}
+      onPublish={(extraData) => handleSubmit(true, extraData)}
+      onSaveDraft={(extraData) => handleSubmit(false, extraData)}
       submitting={submitting}
       error={error}
     />,

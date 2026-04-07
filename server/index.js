@@ -137,6 +137,88 @@ Rules: ${currentData?.rules || "Not set"}`;
   }
 });
 
+// Generate full landing page HTML
+app.post('/api/ai/generate-landing-page', require('./middleware/requireRole')('Organizer', 'Admin'), async (req, res) => {
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const { wizardData } = req.body;
+
+    const prompt = `Create a complete, beautiful, single-page HTML landing page for this hackathon. Include embedded CSS and minimal JavaScript. Make it visually stunning, responsive, and professional.
+
+HACKATHON DATA:
+Title: ${wizardData?.title || "Hackathon"}
+Description: ${wizardData?.description || ""}
+Tagline: ${wizardData?.tagline || ""}
+Target Audience: ${wizardData?.targetAudience || "Everyone"}
+Format: ${wizardData?.format || "online"}
+Contact: ${wizardData?.contactEmail || ""}
+Tracks: ${(wizardData?.tracks || []).map(t => `${t.name}: ${t.description || ""}`).join("; ") || "None"}
+Prizes: ${(wizardData?.prizes || []).map(p => `${p.place || ""} ${p.title}: ${p.value || ""}`).join("; ") || "None"}
+Schedule: Reg: ${wizardData?.schedule?.registrationOpen || "TBD"} - ${wizardData?.schedule?.registrationClose || "TBD"}, Submission: ${wizardData?.schedule?.submissionDeadline || "TBD"}, Judging: ${wizardData?.schedule?.judgingStart || "TBD"} - ${wizardData?.schedule?.judgingEnd || "TBD"}
+Judging Criteria: ${(wizardData?.judgingCriteria || []).map(c => `${c.name} (${c.weight}%)`).join(", ") || "None"}
+Sponsors: ${(wizardData?.sponsors || []).map(s => `${s.name} (${s.tier})`).join(", ") || "None"}
+Rules: ${wizardData?.rules || ""}
+FAQ: ${(wizardData?.faq || []).map(f => `Q: ${f.question} A: ${f.answer}`).join("; ") || "None"}
+Primary Color: ${wizardData?.branding?.primaryColor || "#7C3AED"}
+Secondary Color: ${wizardData?.branding?.secondaryColor || "#00D4AA"}
+
+REQUIREMENTS:
+- Complete self-contained HTML with embedded CSS
+- Sections: Hero with title+tagline+CTA, About, Tracks, Prizes, Schedule, Judging Criteria, Sponsors, FAQ, Register CTA, Footer with contact
+- Use the branding colors
+- Responsive design
+- Smooth scroll navigation
+- Arabic-friendly (use dir="rtl" if content is Arabic)
+- Google Fonts via CDN
+- Return ONLY raw HTML starting with <!DOCTYPE html>`;
+
+    const result = await model.generateContent(prompt);
+    let html = result.response.text();
+    html = html.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+    res.json({ html });
+  } catch (err) {
+    console.error("Generate landing page error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Improve existing landing page with instructions
+app.post('/api/ai/improve-landing-page', require('./middleware/requireRole')('Organizer', 'Admin'), async (req, res) => {
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const { currentHtml, instruction } = req.body;
+
+    const prompt = `Modify this HTML landing page based on the instruction. Return ONLY the complete modified HTML, no explanations.
+
+CURRENT HTML:
+${(currentHtml || "").substring(0, 20000)}
+
+INSTRUCTION: ${instruction}
+
+Return ONLY raw HTML starting with <!DOCTYPE html>.`;
+
+    const result = await model.generateContent(prompt);
+    let html = result.response.text();
+    html = html.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+    res.json({ html });
+  } catch (err) {
+    console.error("Improve landing page error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Test routes (admin only) ───────────────────────────────────────────────
 app.get('/api/test', (req, res) => {
   res.json({ message: "Hello from your Express backend!" });

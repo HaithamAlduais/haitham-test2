@@ -10,13 +10,7 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
   const canProceed = data.title.trim().length > 0;
   const isRTL = language === "ar";
 
-  const FORMAT_OPTIONS = [
-    { value: "online", label: t("formatOnline"), icon: Monitor },
-    { value: "in-person", label: t("formatInPerson"), icon: MapPin },
-  ];
-
-  const location = data.location || { name: "", address: "", lat: null, lng: null };
-
+  const location = data.location || { name: "", address: "" };
   const updateLocation = (field, value) => {
     onChange({ location: { ...location, [field]: value } });
   };
@@ -25,150 +19,73 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-black text-foreground">{t("basicInfoTitle")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("basicInfoDesc")}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("basicInfoDesc")}</p>
       </div>
 
       <div className="space-y-5">
         {/* Title */}
         <div className="space-y-2">
           <Label htmlFor="title">{t("hackathonTitleLabel")}</Label>
-          <Input
-            id="title"
-            value={data.title}
-            onChange={(e) => onChange({ title: e.target.value })}
-            placeholder={t("hackathonTitlePlaceholder")}
-          />
+          <Input id="title" value={data.title} onChange={(e) => onChange({ title: e.target.value })} placeholder={t("hackathonTitlePlaceholder")} />
         </div>
 
-        {/* Tagline */}
+        {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="tagline">{t("taglineLabel")}</Label>
-          <Input
-            id="tagline"
-            value={data.tagline}
-            onChange={(e) => onChange({ tagline: e.target.value })}
-            placeholder={t("taglinePlaceholder")}
-          />
+          <Label htmlFor="description">{t("descriptionLabel2")}</Label>
+          <Textarea id="description" value={data.description} onChange={(e) => onChange({ description: e.target.value })} placeholder={t("descriptionPlaceholder2")} rows={5} />
+        </div>
+
+        {/* Target Audience */}
+        <div className="space-y-2">
+          <Label htmlFor="targetAudience">{t("targetAudienceLabel")}</Label>
+          <Textarea id="targetAudience" value={data.targetAudience || ""} onChange={(e) => onChange({ targetAudience: e.target.value })} placeholder={t("targetAudiencePlaceholder")} rows={3} />
         </div>
 
         {/* Format */}
         <div className="space-y-2">
           <Label>{t("formatLabel")}</Label>
           <div className="flex gap-2">
-            {FORMAT_OPTIONS.map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => onChange({ format: value })}
+            {[
+              { value: "online", label: t("formatOnline"), icon: Monitor },
+              { value: "in-person", label: t("formatInPerson"), icon: MapPin },
+            ].map(({ value, label, icon: Icon }) => (
+              <button key={value} type="button" onClick={() => onChange({ format: value })}
                 className={`flex items-center gap-2 rounded-base border-2 px-4 py-2 text-sm font-bold transition-colors ${
-                  (data.format || "online") === value
-                    ? "border-border bg-main text-main-foreground shadow-neo-sm"
-                    : "border-border bg-card text-foreground hover:bg-muted"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
+                  (data.format || "online") === value ? "border-border bg-main text-main-foreground shadow-neo-sm" : "border-border bg-card text-foreground hover:bg-muted"
+                }`}>
+                <Icon className="h-4 w-4" />{label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Format-specific sections */}
+        {/* In-person: location */}
         {(data.format || "online") === "in-person" && (
           <div className="space-y-4 rounded-base border-2 border-border bg-card p-4">
             <div className="space-y-2">
-              <Label htmlFor="locationName">{t("locationNameLabel")}</Label>
-              <Input
-                id="locationName"
-                value={location.name}
-                onChange={(e) => updateLocation("name", e.target.value)}
-                placeholder={t("locationNamePlaceholder")}
-              />
+              <Label>{t("locationNameLabel")}</Label>
+              <Input value={location.name} onChange={(e) => updateLocation("name", e.target.value)} placeholder={t("locationNamePlaceholder")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="locationAddress">{t("locationAddressLabel")}</Label>
-              <Input
-                id="locationAddress"
-                value={location.address}
-                onChange={(e) => updateLocation("address", e.target.value)}
-                placeholder={t("locationAddressPlaceholder")}
-              />
+              <Label>{t("locationAddressLabel")}</Label>
+              <Input value={location.address} onChange={(e) => updateLocation("address", e.target.value)} placeholder={t("locationAddressPlaceholder")} />
             </div>
             <div className="flex items-center justify-center rounded-base border-2 border-dashed border-border bg-muted/50 p-8 text-muted-foreground">
-              <MapPin className="h-5 w-5 mr-2" />
-              {t("mapPlaceholder")}
+              <MapPin className="h-5 w-5 mr-2" />{t("mapPlaceholder")}
             </div>
           </div>
         )}
 
         {(data.format || "online") === "online" && (
           <div className="rounded-base border-2 border-border bg-card p-4">
-            <p className="text-sm text-muted-foreground">
-              {t("discordAutoCreate")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("discordAutoCreate")}</p>
           </div>
         )}
-
-        {/* Description */}
-        <div className="space-y-2">
-          <Label htmlFor="description">{t("descriptionLabel2")}</Label>
-          <Textarea
-            id="description"
-            value={data.description}
-            onChange={(e) => onChange({ description: e.target.value })}
-            placeholder={t("descriptionPlaceholder2")}
-            rows={5}
-          />
-        </div>
-
-        {/* Target Audience */}
-        <div className="space-y-2">
-          <Label htmlFor="targetAudience">{t("targetAudienceLabel")}</Label>
-          <Textarea
-            id="targetAudience"
-            value={data.targetAudience || ""}
-            onChange={(e) => onChange({ targetAudience: e.target.value })}
-            placeholder={t("targetAudiencePlaceholder")}
-            rows={3}
-          />
-        </div>
-
-        {/* Why Participate */}
-        <div className="space-y-2">
-          <Label htmlFor="whyParticipate">{t("whyParticipateLabel")}</Label>
-          <Textarea
-            id="whyParticipate"
-            value={data.whyParticipate || ""}
-            onChange={(e) => onChange({ whyParticipate: e.target.value })}
-            placeholder={t("whyParticipatePlaceholder")}
-            rows={3}
-          />
-        </div>
-
-        {/* Rules */}
-        <div className="space-y-2">
-          <Label htmlFor="rules">{t("rulesTitle")}</Label>
-          <Textarea
-            id="rules"
-            value={data.rules}
-            onChange={(e) => onChange({ rules: e.target.value })}
-            placeholder={t("rulesPlaceholder")}
-            rows={4}
-          />
-        </div>
 
         {/* Contact Email */}
         <div className="space-y-2">
           <Label htmlFor="contactEmail">{t("contactEmailLabel")}</Label>
-          <Input
-            id="contactEmail"
-            type="email"
-            value={data.contactEmail || ""}
-            onChange={(e) => onChange({ contactEmail: e.target.value })}
-            placeholder={t("contactEmailPlaceholder")}
-          />
+          <Input id="contactEmail" type="email" value={data.contactEmail || ""} onChange={(e) => onChange({ contactEmail: e.target.value })} placeholder={t("contactEmailPlaceholder")} />
         </div>
       </div>
 

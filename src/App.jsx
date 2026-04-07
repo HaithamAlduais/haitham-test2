@@ -14,6 +14,9 @@ import EmailVerifiedPage from './pages/EmailVerifiedPage'
 import VerifyEmailHoldingPage from './pages/VerifyEmailHoldingPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
+import HackathonPublicPage from './pages/HackathonPublicPage'
+import RegistrationFormPage from './pages/RegistrationFormPage'
+import TeamFormationPage from './pages/TeamFormationPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -137,6 +140,11 @@ function App() {
           </PrivateRoute>
         }
       />
+
+      {/* Public hackathon pages */}
+      <Route path="/hackathon/:slug" element={<HackathonPublicPage />} />
+      <Route path="/hackathon/:slug/register" element={<RegistrationFormPage />} />
+      <Route path="/hackathon/:slug/teams" element={<TeamFormationPage />} />
 
       {/* Shared routes (all roles) */}
       <Route

@@ -36,6 +36,7 @@ const Login = () => {
     role: "Participant",
   });
   const [error, setError] = useState("");
+  const [pendingOAuthUser, setPendingOAuthUser] = useState(null); // For role selection after OAuth
   const [loading, setLoading] = useState(false);
   const [showResetForm, setShowResetForm] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -158,31 +159,47 @@ const Login = () => {
     }
   };
 
+  // Shared OAuth handler — checks if user exists, asks role if new
+  const handleOAuthResult = async (user) => {
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
+      // Existing user — go to dashboard
+      const role = userDocSnap.data().role;
+      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
+    } else {
+      // New user — ask for role
+      setPendingOAuthUser(user);
+    }
+  };
+
+  const completeOAuthSignup = async (selectedRole) => {
+    if (!pendingOAuthUser) return;
+    setLoading(true);
+    try {
+      await setDoc(doc(db, "users", pendingOAuthUser.uid), {
+        uid: pendingOAuthUser.uid,
+        email: pendingOAuthUser.email,
+        displayName: pendingOAuthUser.displayName || "",
+        role: selectedRole,
+        roles: [selectedRole],
+        createdAt: serverTimestamp(),
+      });
+      setPendingOAuthUser(null);
+      navigate(selectedRole === "Organizer" ? "/dashboard" : "/home", { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setError("");
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      if (!user.emailVerified && !skipEmailVerification) {
-        await auth.signOut();
-        setError("Your email address has not been verified.");
-        setLoading(false);
-        return;
-      }
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: user.email,
-          role: "Participant",
-          roles: ["Participant"],
-          createdAt: serverTimestamp(),
-        });
-      }
-      const role = userDocSnap.exists() ? userDocSnap.data().role : "Participant";
-      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
+      await handleOAuthResult(result.user);
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code));
     } finally {
@@ -195,20 +212,7 @@ const Login = () => {
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, githubProvider);
-      const user = result.user;
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: user.email,
-          role: "Participant",
-          roles: ["Participant"],
-          createdAt: serverTimestamp(),
-        });
-      }
-      const role = userDocSnap.exists() ? userDocSnap.data().role : "Participant";
-      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
+      await handleOAuthResult(result.user);
     } catch (err) {
       if (err.code === "auth/account-exists-with-different-credential") {
         setError("An account already exists with the same email. Try signing in with Google or email.");
@@ -219,6 +223,57 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Role selection modal for new OAuth users
+  if (pendingOAuthUser) {
+    return (
+      <RetroGrid className="bg-background" lineColor="var(--border)" opacity={0.4} cellSize={60} angle={65}>
+        <div className="flex min-h-screen items-center justify-center px-4" dir={dir}>
+          <div className="w-full max-w-md rounded-2xl border-2 border-border bg-secondary-background p-8 shadow-shadow">
+            <div className="mb-6 flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-border bg-main shadow-neo-sm">
+                <Zap className="h-4 w-4 text-main-foreground" strokeWidth={3} />
+              </div>
+              <span className="text-lg font-black tracking-tight text-foreground">ramsha</span>
+            </div>
+
+            <h2 className="text-2xl font-black text-foreground">{t("auth.chooseRole") || "Choose Your Role"}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("auth.chooseRoleDesc") || `Welcome ${pendingOAuthUser.displayName || pendingOAuthUser.email}! How will you use Ramsha?`}
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                onClick={() => completeOAuthSignup("Participant")}
+                disabled={loading}
+                className="flex items-center gap-4 rounded-base border-2 border-border bg-card p-4 text-start hover:border-main transition-colors"
+              >
+                <span className="text-3xl">🎯</span>
+                <div>
+                  <p className="font-bold text-foreground">{t("auth.participant") || "Participant"}</p>
+                  <p className="text-xs text-muted-foreground">{t("auth.participantDesc") || "Join hackathons, form teams, submit projects"}</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => completeOAuthSignup("Organizer")}
+                disabled={loading}
+                className="flex items-center gap-4 rounded-base border-2 border-border bg-card p-4 text-start hover:border-main transition-colors"
+              >
+                <span className="text-3xl">🏢</span>
+                <div>
+                  <p className="font-bold text-foreground">{t("auth.organizer") || "Organizer"}</p>
+                  <p className="text-xs text-muted-foreground">{t("auth.organizerDesc") || "Create and manage hackathons, review teams"}</p>
+                </div>
+              </button>
+            </div>
+
+            {loading && <p className="mt-4 text-center text-sm text-main font-bold">{t("auth.settingUp") || "Setting up your account..."}</p>}
+          </div>
+        </div>
+      </RetroGrid>
+    );
+  }
 
   return (
     <RetroGrid

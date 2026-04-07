@@ -87,6 +87,56 @@ app.use('/api/sponsor', sponsorPortalRoutes);
 const notificationRoutes = require('./routes/notifications');
 app.use('/api/notifications', notificationRoutes);
 
+// ── AI Wizard Suggest ──────────────────────────────────────────────────────
+app.post('/api/ai/wizard-suggest', require('./middleware/requireRole')('Organizer', 'Admin'), async (req, res) => {
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const { targetStep, currentData } = req.body;
+    if (!targetStep) return res.status(400).json({ error: "targetStep required" });
+
+    const context = `You are an AI assistant helping create a hackathon. Here's what the organizer entered:
+Title: ${currentData?.title || "Not set"}
+Tagline: ${currentData?.tagline || "Not set"}
+Description: ${currentData?.description || "Not set"}
+Format: ${currentData?.format || "online"}
+Target Audience: ${currentData?.targetAudience || "Not set"}
+${currentData?.tracks?.length ? `Tracks: ${currentData.tracks.map(t => t.name).join(", ")}` : "No tracks yet"}
+${currentData?.schedule?.registrationOpen ? `Reg opens: ${currentData.schedule.registrationOpen}` : ""}
+Rules: ${currentData?.rules || "Not set"}`;
+
+    const prompts = {
+      schedule: `${context}\n\nSuggest realistic dates starting 2-4 weeks from now for a hackathon. Return ONLY valid JSON:\n{"registrationOpen":"2026-05-01T00:00","registrationClose":"2026-05-14T23:59","submissionDeadline":"2026-05-20T23:59","judgingStart":"2026-05-21T09:00","judgingEnd":"2026-05-23T18:00"}`,
+      tracks: `${context}\n\nSuggest 3 relevant tracks for this hackathon. Return ONLY a JSON array:\n[{"name":"Track Name","description":"Brief description of the track"}]`,
+      judging: `${context}\n\nSuggest 5 judging criteria with weights totaling exactly 100. Return ONLY a JSON array:\n[{"name":"Innovation","weight":25,"maxScore":5}]`,
+      prizes: `${context}\n\nSuggest prizes. Return ONLY a JSON array:\n[{"place":"1st","title":"Grand Prize","value":"$5,000","category":"overall","type":"cash"}]`,
+      faq: `${context}\n\nSuggest 5 FAQ entries. Return ONLY a JSON array:\n[{"question":"Who can participate?","answer":"Anyone 18+ with a passion for building."}]`,
+      resources: `${context}\n\nSuggest 3 resources for participants. Return ONLY a JSON array:\n[{"title":"Starter Template","type":"template","url":"https://github.com/example","autoSendOnAccept":true}]`,
+    };
+
+    const prompt = prompts[targetStep];
+    if (!prompt) return res.status(400).json({ error: `Unknown step: ${targetStep}` });
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/[\[{][\s\S]*[\]}]/);
+    if (!jsonMatch) return res.json({ suggestion: null, raw: text });
+
+    const suggestion = JSON.parse(jsonMatch[0]);
+    return res.json({ suggestion });
+  } catch (err) {
+    console.error("AI wizard suggest error:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Test routes (admin only) ───────────────────────────────────────────────
 app.get('/api/test', (req, res) => {
   res.json({ message: "Hello from your Express backend!" });

@@ -147,18 +147,6 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
           />
         </div>
 
-        {/* How It Works */}
-        <div className="space-y-2">
-          <Label htmlFor="howItWorks">{t("howItWorksLabel")}</Label>
-          <Textarea
-            id="howItWorks"
-            value={data.howItWorks || ""}
-            onChange={(e) => onChange({ howItWorks: e.target.value })}
-            placeholder={t("howItWorksPlaceholder")}
-            rows={3}
-          />
-        </div>
-
         {/* Rules */}
         <div className="space-y-2">
           <Label htmlFor="rules">{t("rulesTitle")}</Label>

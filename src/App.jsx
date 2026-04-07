@@ -14,6 +14,8 @@ import EmailVerifiedPage from './pages/EmailVerifiedPage'
 import VerifyEmailHoldingPage from './pages/VerifyEmailHoldingPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
+import HackathonsPage from './pages/HackathonsPage'
+import ManageHackathonPage from './pages/ManageHackathonPage'
 import HackathonPublicPage from './pages/HackathonPublicPage'
 import RegistrationFormPage from './pages/RegistrationFormPage'
 import TeamFormationPage from './pages/TeamFormationPage'
@@ -137,6 +139,24 @@ function App() {
         element={
           <PrivateRoute requiredRole="Organizer">
             <EventDetailPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Organizer hackathon management */}
+      <Route
+        path="/hackathons"
+        element={
+          <PrivateRoute requiredRole="Organizer">
+            <HackathonsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/hackathons/:id"
+        element={
+          <PrivateRoute requiredRole="Organizer">
+            <ManageHackathonPage />
           </PrivateRoute>
         }
       />

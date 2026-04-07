@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Bell, Search, Users } from 'lucide-react';
+import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Bell, Search, Users, Trophy } from 'lucide-react';
 
 /**
  * Shared dashboard shell: sidebar + top bar + mobile bottom nav.
@@ -23,6 +23,7 @@ export function DashboardLayout({ children, activePath }) {
 
   const navItems = [
     { icon: LayoutDashboard, label: t('dashboard'), path: '/dashboard' },
+    { icon: Trophy, label: 'Hackathons', path: '/hackathons' },
     { icon: CalendarDays, label: t('sessions'), path: '/sessions' },
     { icon: Users, label: t('events'), path: '/events' },
     { icon: Settings, label: t('settingsNav'), path: '/settings' },

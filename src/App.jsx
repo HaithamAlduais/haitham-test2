@@ -135,11 +135,12 @@ function App() {
         }
       />
 
+      {/* My Events — unified page for all event types */}
       <Route
         path="/events"
         element={
           <PrivateRoute requiredRole="Organizer">
-            <EventsPage />
+            <HackathonsPage />
           </PrivateRoute>
         }
       />
@@ -162,15 +163,8 @@ function App() {
         }
       />
 
-      {/* Organizer hackathon management */}
-      <Route
-        path="/hackathons"
-        element={
-          <PrivateRoute requiredRole="Organizer">
-            <HackathonsPage />
-          </PrivateRoute>
-        }
-      />
+      {/* Hackathon management (kept for backward compat) */}
+      <Route path="/hackathons" element={<Navigate to="/events" replace />} />
       <Route
         path="/hackathons/:id"
         element={

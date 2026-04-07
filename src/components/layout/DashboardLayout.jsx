@@ -34,7 +34,7 @@ export function DashboardLayout({ children, activePath }) {
     ] : []),
     // Organizer
     ...(isOrgRole ? [
-      { icon: Trophy, label: t('myEvents'), path: '/hackathons' },
+      { icon: Trophy, label: t('myEvents'), path: '/events' },
       { icon: CalendarDays, label: t('sessions'), path: '/sessions' },
     ] : []),
     // Shared

@@ -50,20 +50,16 @@ export function LandingHeader() {
   const { setMode, setTheme, isOrganizer } = useTheme();
   const L = getLandingCopy(lang);
   const sheetSide = dir === "rtl" ? "left" : "right";
-  const isOrganizerPage = location.pathname === "/organizer";
-
   const navItems = L.navItems.filter((item) => {
-    if (item.href === "#participant-features") return !isOrganizerPage;
-    if (item.href === "#organizer-features") return isOrganizerPage;
+    if (item.href === "#participant-features") return !isOrganizer;
+    if (item.href === "#organizer-features") return isOrganizer;
     return true;
   });
 
   const onAudienceSwitch = (toOrganizer) => {
-    // Set state FIRST so switch updates visually, then navigate
     setMode(toOrganizer ? "organizer" : "participant");
     setTheme(toOrganizer ? "dark" : "light");
-    // Small delay so React re-renders the switch before route change unmounts it
-    setTimeout(() => navigate(toOrganizer ? "/organizer" : "/"), 50);
+    // No navigation — same page, content toggles via isOrganizer state
   };
 
   const docked = useLandingHeaderDocked(32);
@@ -88,7 +84,7 @@ export function LandingHeader() {
         )}
       >
         {/* Logo */}
-        <Link to={isOrganizerPage ? "/organizer" : "/"} className="flex shrink-0 items-center gap-2.5">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-main">
             <Zap className="h-4 w-4 text-main-foreground" strokeWidth={3} />
           </div>

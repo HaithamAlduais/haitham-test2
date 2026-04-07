@@ -82,3 +82,12 @@ Created EventPublicPage at /event/:id that renders type-specific sections condit
 
 ### Step 4.4 — Unified Dashboard
 Updated the organizer's "My Events" page to show all event types with type filter chips. Each event card shows an emoji icon for its type and a type badge. The manage event page and all API calls updated to use unified /api/events/ endpoints. Sidebar renamed from "Hackathons" to "My Events".
+
+### Step 4.5 — Type-Specific Creation Wizards
+Built dedicated creation wizards for every event type: WorkshopWizard (4 steps: Info with speaker/platform, Schedule, Settings, Review), SeminarWizard (4 steps: Info, Speaker with bio/title, Schedule with platform, Review), TrainingWizard (4 steps: Info with instructor/level, Curriculum with dynamic module list, Schedule, Review), ConferenceWizard (4 steps: Info, Tracks with add/remove, Schedule with start/end dates, Review). All wizards post to the unified /api/events endpoint with the correct eventType. EventCreationFlow now routes each type to its dedicated wizard.
+
+### Step 4.6 — Participant Dashboard
+Replaced the placeholder ParticipantHomePage with a full dashboard featuring three tabs: My Events (all registered events with status badges), My Teams (team cards with roles, codes, and status), and My Submissions (project cards with scores). Backend uses Firestore collectionGroup queries to find the participant's registrations, team memberships, and submissions across all events. Stat cards show total counts, and an "Explore Events" CTA leads to the explore page.
+
+### Step 4.7 — Winner Announcement Page
+Built the winner announcement / leaderboard page at /event/:id/winners. Features a podium-style layout for the top 3 (gold/silver/bronze medal circles), with the 1st place card being visually larger and centered. Full rankings list for positions 4+ shows project names, tech stacks, scores, and links to GitHub/demo. Works as both a live leaderboard during judging and a final winners announcement when the event is completed.

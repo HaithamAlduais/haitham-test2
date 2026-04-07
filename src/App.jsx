@@ -37,6 +37,7 @@ import EventLegacyPage from './pages/EventLegacyPage'
 import WorkbackDashboardPage from './pages/WorkbackDashboardPage'
 import OfficeHoursPage from './pages/OfficeHoursPage'
 import PageBuilderPage from './pages/PageBuilderPage'
+import AdminTestPage from './pages/AdminTestPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -281,6 +282,9 @@ function App() {
 
       {/* Legacy redirects */}
       <Route path="/organizer" element={<Navigate to="/" replace />} />
+
+      {/* Admin test page */}
+      <Route path="/admin/test" element={<AdminTestPage />} />
 
       {/* Default redirect */}
       <Route path="*" element={<DefaultRedirect />} />

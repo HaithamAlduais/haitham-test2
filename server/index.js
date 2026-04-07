@@ -80,9 +80,38 @@ app.use('/api/sponsor', sponsorPortalRoutes);
 const notificationRoutes = require('./routes/notifications');
 app.use('/api/notifications', notificationRoutes);
 
-// A simple test route
+// ── Test routes (admin only) ───────────────────────────────────────────────
 app.get('/api/test', (req, res) => {
   res.json({ message: "Hello from your Express backend!" });
+});
+
+// Test email sending
+app.post('/api/test-email', require('./middleware/requireRole')('Admin', 'Organizer'), async (req, res) => {
+  try {
+    const { sendTemplatedEmail } = require('./services/emailService');
+    const result = await sendTemplatedEmail('registration_confirmation', {
+      to: req.body.to || req.email,
+      data: { participantName: 'Test User', hackathonTitle: 'AI Builders 2026', hackathonUrl: 'https://ramsha.net/hackathon/ai-builders-2026' },
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Test Gemini AI
+app.post('/api/test-gemini', require('./middleware/requireRole')('Admin', 'Organizer'), async (req, res) => {
+  try {
+    const { screenApplication } = require('./services/aiScreening');
+    const result = await screenApplication({
+      hackathon: { title: 'AI Builders 2026', description: 'Build AI tools', tracks: [{ name: 'AI Dev Tools' }] },
+      registration: { formResponses: { motivation: req.body.prompt || 'Test application' } },
+      userEmail: 'test@example.com',
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Discord Bot ────────────────────────────────────────────────────────────

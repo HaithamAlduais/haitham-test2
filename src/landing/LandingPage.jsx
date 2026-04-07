@@ -11,16 +11,16 @@ import { FeatureCarouselSection } from "./FeatureCarouselSection";
 import { LandingFAQ } from "./LandingFAQ";
 import { LandingContact } from "./LandingContact";
 import { getLandingCopy } from "./landingLocale";
+import HackathonMarketplace from "@/components/hackathon/HackathonMarketplace";
 
 export default function LandingPage() {
   const { lang } = useLanguage();
-  const { setMode, setTheme } = useTheme();
+  const { setMode } = useTheme();
   const L = getLandingCopy(lang);
 
   useLayoutEffect(() => {
     setMode("participant");
-    setTheme("light");
-  }, [setMode, setTheme]);
+  }, [setMode]);
 
   return (
     <ReactLenis root>
@@ -39,12 +39,26 @@ export default function LandingPage() {
         <main>
           <LandingIntro />
           <LogoMarquee heading={L.logoMarqueeHeading} className="border-y border-border" />
+
+          {/* Hackathon marketplace — browse public hackathons */}
+          <HackathonMarketplace />
+
+          {/* Participant features */}
           <FeatureCarouselSection
             id="participant-features"
             title={L.participantSectionTitle}
             subtitle={L.participantSectionSubtitle}
             items={L.participantFeatures}
           />
+
+          {/* Organizer features */}
+          <FeatureCarouselSection
+            id="organizer-features"
+            title={L.organizerSectionTitle}
+            subtitle={L.organizerSectionSubtitle}
+            items={L.organizerFeatures}
+          />
+
           <LandingFAQ />
         </main>
         <LandingContact />

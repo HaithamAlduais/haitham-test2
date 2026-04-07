@@ -44,3 +44,25 @@ Built the announcement system using Firestore subcollections. Organizers can cre
 
 ### Step 2.5 — Workshop Management
 Built the workshop scheduling system. Organizers create workshops with title, description, date/time, duration, platform (Zoom/Discord), meeting link, and resource attachments. Participants can RSVP to workshops. All authenticated hackathon members can view the workshop schedule.
+
+---
+
+## Phase 3: Ecosystem & Intelligence
+
+### Step 3.1 — AI Screening Agent
+Integrated Claude API (Anthropic SDK) for automated application screening. The AI evaluates registration applications against hackathon criteria, providing a 0-100 score, reasoning, and accept/reject/manual_review recommendation. Supports single registration screening, batch screening of all pending registrations, and team readiness evaluation. The organizer dashboard shows AI scores in the registration table with a one-click "AI Screen Pending" button. Gracefully handles missing API key.
+
+### Step 3.2 — Enhanced User Profiles
+Expanded the user profile system with bio, phone, location, skills (tag input), interests, education (institution/degree/field/graduation year), professional experience (company/title/years), and social links (GitHub/LinkedIn/Twitter/portfolio). The backend computes a profile completeness percentage (0-100%) based on filled fields. The frontend shows a progress bar and organized form sections with the ExtendedProfileSection component.
+
+### Step 3.3 — Explore Page
+Built a dedicated explore page at /explore with full-text search across hackathon titles and taglines, plus status filter buttons (All/Published/Active/Judging/Completed). Each hackathon card shows status badge, track tags, registration dates, and participant count. Clean empty states for no results and no matches.
+
+### Step 3.4 — Project Gallery
+Built the project gallery page at /hackathon/:slug/gallery showing ranked submissions with medal badges for the top 3 (gold/silver/bronze). Each project card displays name, description, total score, tech stack tags, and links to GitHub/demo/video. Searchable by project name or tech stack.
+
+### Step 3.5 — Analytics Dashboard
+Built the organizer analytics dashboard at /hackathons/:id/analytics using Recharts (already a project dependency). Features animated stat cards (registrations, accepted, teams, submissions, submission rate), a pie chart for registration status distribution, a bar chart for top projects by score, and status breakdowns for submissions and teams.
+
+### Step 3.6 — Workshops Frontend
+Built the participant-facing workshop list page at /hackathon/:slug/workshops. Shows workshop cards with date/time, duration, platform, meeting link, RSVP button, attendee count, and past/upcoming badges. Participants can RSVP and join meetings directly.

@@ -58,11 +58,17 @@ export function LandingHeader() {
     return true;
   });
 
-  const onAudienceSwitch = (checked) => {
-    const nextOrganizer = Boolean(checked);
-    setMode(nextOrganizer ? "organizer" : "participant");
-    setTheme(nextOrganizer ? "dark" : "light");
-    navigate(nextOrganizer ? "/organizer" : "/");
+  const onAudienceSwitch = (toOrganizer) => {
+    // Force theme change FIRST, then navigate
+    if (toOrganizer) {
+      setTheme("dark");
+      setMode("organizer");
+      navigate("/organizer");
+    } else {
+      setTheme("light");
+      setMode("participant");
+      navigate("/");
+    }
   };
 
   const docked = useLandingHeaderDocked(32);
@@ -116,9 +122,7 @@ export function LandingHeader() {
             <Switch
               aria-label={t("nav.audienceSwitch")}
               checked={isOrganizerPage}
-              onCheckedChange={(checked) => {
-                if (checked !== isOrganizerPage) onAudienceSwitch(checked);
-              }}
+              onCheckedChange={(checked) => onAudienceSwitch(checked)}
             />
             <span className="text-xs font-semibold text-muted-foreground">
               {t("nav.organizer")}

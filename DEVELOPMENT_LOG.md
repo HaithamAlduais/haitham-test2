@@ -66,3 +66,19 @@ Built the organizer analytics dashboard at /hackathons/:id/analytics using Recha
 
 ### Step 3.6 — Workshops Frontend
 Built the participant-facing workshop list page at /hackathon/:slug/workshops. Shows workshop cards with date/time, duration, platform, meeting link, RSVP button, attendee count, and past/upcoming badges. Participants can RSVP and join meetings directly.
+
+---
+
+## Phase 4: Multi-Event Architecture Unification
+
+### Step 4.1 — Unified Events Backend
+Rewrote the event controller to handle ALL event types (hackathon, workshop, seminar, training, conference) through a single `/api/events` API. Added public listing endpoint with type filter, type-specific fields (tracks/prizes for hackathons, capacity/platform for workshops, modules/level for training), type-specific status transitions, and backward-compatible mirroring to the legacy hackathons collection. All sub-route controllers (registration, teams, submissions, judging, announcements, workshops) updated to use the unified events collection.
+
+### Step 4.2 — Unified Explore Page
+Transformed the explore page from "Explore Hackathons" to "Explore Events" showing all public event types. Added two filter rows: Type filter (All/Hackathon/Workshop/Seminar/Training/Conference with emoji icons) and Status filter (All/Published/Active/Judging/Completed). Each event card shows its type badge alongside status. The landing page marketplace now fetches from the unified events API.
+
+### Step 4.3 — Unified Public Event Page
+Created EventPublicPage at /event/:id that renders type-specific sections conditionally: hackathons show tracks, prizes, judging criteria, team formation links; workshops/seminars show speaker and platform info; training shows instructor, modules, and level. All types share the common layout (description, schedule, registration CTA). Legacy /hackathon/:slug routes preserved.
+
+### Step 4.4 — Unified Dashboard
+Updated the organizer's "My Events" page to show all event types with type filter chips. Each event card shows an emoji icon for its type and a type badge. The manage event page and all API calls updated to use unified /api/events/ endpoints. Sidebar renamed from "Hackathons" to "My Events".

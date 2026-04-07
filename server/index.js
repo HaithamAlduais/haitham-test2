@@ -62,11 +62,13 @@ app.use(express.json());
 const sessionRoutes = require('./routes/sessions');
 const attendanceRoutes = require('./routes/attendance');
 const eventRoutes = require('./routes/events');
+const hackathonRoutes = require('./routes/hackathons');
 const userRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/upload');
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/hackathons', hackathonRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 

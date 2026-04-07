@@ -29,23 +29,29 @@ const app = express();
 // In development: allow localhost/127.0.0.1 (any port) for Vite and local tools.
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : [];
 
-const isLocalDevOrigin = (origin) => {
-  try {
-    const { hostname } = new URL(origin);
-    return hostname === 'localhost' || hostname === '127.0.0.1';
-  } catch {
-    return false;
-  }
-};
+// Always allow these origins (Firebase Hosting domains + localhost)
+const ALWAYS_ALLOWED = [
+  'https://ramsha.net',
+  'https://www.ramsha.net',
+  'https://ramsha-cd619.web.app',
+  'https://ramsha-cd619.firebaseapp.com',
+];
 
 app.use(cors({
   origin(origin, cb) {
-    // Allow requests with no origin (server-to-server, curl, mobile apps)
+    // Allow requests with no origin (same-origin via hosting rewrite, server-to-server, curl)
     if (!origin) return cb(null, true);
-    if (isLocalDevOrigin(origin)) return cb(null, true);
+    // Always allow our Firebase domains
+    if (ALWAYS_ALLOWED.includes(origin)) return cb(null, true);
+    // Allow configured origins
     if (allowedOrigins.includes(origin)) return cb(null, true);
+    // Allow localhost in development
+    try {
+      const { hostname } = new URL(origin);
+      if (hostname === 'localhost' || hostname === '127.0.0.1') return cb(null, true);
+    } catch {}
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],

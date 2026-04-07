@@ -4,8 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function TracksStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const tracks = data.tracks || [];
   const [newTrack, setNewTrack] = useState({ name: "", description: "" });
 
@@ -22,9 +24,9 @@ export default function TracksStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Tracks / Categories</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("tracksTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Define challenge tracks for your hackathon. This is optional — skip if you don't need tracks.
+          {t("tracksDesc")}
         </p>
       </div>
 
@@ -56,7 +58,7 @@ export default function TracksStep({ data, onChange, onNext, onBack }) {
       {/* Add new track */}
       <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
         <div className="space-y-2">
-          <Label>Track Name</Label>
+          <Label>{t("trackNameLabel")}</Label>
           <Input
             value={newTrack.name}
             onChange={(e) => setNewTrack({ ...newTrack, name: e.target.value })}
@@ -64,22 +66,22 @@ export default function TracksStep({ data, onChange, onNext, onBack }) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Description (optional)</Label>
+          <Label>{t("trackDescLabel")}</Label>
           <Textarea
             value={newTrack.description}
             onChange={(e) => setNewTrack({ ...newTrack, description: e.target.value })}
-            placeholder="What should participants build in this track?"
+            placeholder={t("trackDescPlaceholder")}
             rows={2}
           />
         </div>
         <Button variant="neutral" size="sm" onClick={addTrack} disabled={!newTrack.name.trim()}>
-          <Plus className="h-4 w-4" /> Add Track
+          <Plus className="h-4 w-4" /> {t("addTrackBtn")}
         </Button>
       </div>
 
       <div className="flex justify-between">
-        <Button variant="neutral" onClick={onBack}>← Back</Button>
-        <Button onClick={onNext}>Next: Judging →</Button>
+        <Button variant="neutral" onClick={onBack}>{t("backBtn")}</Button>
+        <Button onClick={onNext}>{t("nextJudging")}</Button>
       </div>
     </div>
   );

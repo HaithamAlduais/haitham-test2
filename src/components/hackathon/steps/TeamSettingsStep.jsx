@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, GripVertical } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const FIELD_TYPES = [
   { value: "text", label: "Short Text" },
@@ -150,6 +151,7 @@ function CustomFieldEditor({ fields, onChange }) {
 }
 
 export default function TeamSettingsStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const settings = data.settings || {};
   const regSettings = data.registrationSettings || {};
   const customFields = regSettings.customFields || [];
@@ -165,18 +167,18 @@ export default function TeamSettingsStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Team & Registration Settings</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("teamsTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure team sizes, registration rules, and custom form fields.
+          {t("teamsDesc")}
         </p>
       </div>
 
       {/* Team size */}
       <div className="space-y-5">
-        <h3 className="font-bold text-foreground">Team Size</h3>
+        <h3 className="font-bold text-foreground">{t("teamSize")}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Minimum Members</Label>
+            <Label>{t("minMembers")}</Label>
             <Input
               type="number"
               min={1}
@@ -186,7 +188,7 @@ export default function TeamSettingsStep({ data, onChange, onNext, onBack }) {
             />
           </div>
           <div className="space-y-2">
-            <Label>Maximum Members</Label>
+            <Label>{t("maxMembers")}</Label>
             <Input
               type="number"
               min={1}
@@ -202,15 +204,15 @@ export default function TeamSettingsStep({ data, onChange, onNext, onBack }) {
             checked={settings.allowSolo || false}
             onCheckedChange={(val) => updateSettings("allowSolo", val)}
           />
-          <Label>Allow solo participants (team of 1)</Label>
+          <Label>{t("allowSolo")}</Label>
         </div>
       </div>
 
       {/* Registration */}
       <div className="space-y-5">
-        <h3 className="font-bold text-foreground">Registration</h3>
+        <h3 className="font-bold text-foreground">{t("registration")}</h3>
         <div className="space-y-2">
-          <Label>Max Registrants</Label>
+          <Label>{t("maxRegistrants")}</Label>
           <Input
             type="number"
             min={1}
@@ -224,16 +226,16 @@ export default function TeamSettingsStep({ data, onChange, onNext, onBack }) {
             checked={regSettings.requireApproval !== false}
             onCheckedChange={(val) => updateRegSettings("requireApproval", val)}
           />
-          <Label>Require approval for registrations</Label>
+          <Label>{t("requireApproval")}</Label>
         </div>
       </div>
 
       {/* Custom Registration Fields */}
       <div className="space-y-5">
         <div>
-          <h3 className="font-bold text-foreground">Custom Registration Fields</h3>
+          <h3 className="font-bold text-foreground">{t("customFields")}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Add custom questions to the registration form. These appear after the default fields.
+            {t("customFieldsDesc")}
           </p>
         </div>
         <CustomFieldEditor
@@ -243,8 +245,8 @@ export default function TeamSettingsStep({ data, onChange, onNext, onBack }) {
       </div>
 
       <div className="flex justify-between">
-        <Button variant="neutral" onClick={onBack}>&#8592; Back</Button>
-        <Button onClick={onNext}>Next &#8594;</Button>
+        <Button variant="neutral" onClick={onBack}>{t("backBtn")}</Button>
+        <Button onClick={onNext}>{t("nextBtn")}</Button>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Palette, Wand2, Upload } from "lucide-react";
 import PageBuilder from "@/components/hackathon/PageBuilder";
+import { useLanguage } from "@/context/LanguageContext";
 
 const DEFAULT_BRANDING = {
   logoUrl: "",
@@ -14,6 +15,7 @@ const DEFAULT_BRANDING = {
 };
 
 export default function BrandingStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const [showBuilder, setShowBuilder] = useState(false);
   const branding = { ...DEFAULT_BRANDING, ...data.branding };
 
@@ -54,9 +56,9 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Branding</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("brandingTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Customize the look and feel of your hackathon with logos, colors, and marketing details.
+          {t("brandingDesc")}
         </p>
       </div>
 
@@ -64,7 +66,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
         {/* Logo and Banner */}
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="logoUrl">Logo URL</Label>
+            <Label htmlFor="logoUrl">{t("logoUrl")}</Label>
             <div className="flex gap-2">
               <Input
                 id="logoUrl"
@@ -74,12 +76,12 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
                 className="flex-1"
               />
               <Button type="button" variant="neutral" size="sm" onClick={() => handleUpload("logoUrl", "image/*")}>
-                <Upload className="h-4 w-4" /> Upload
+                <Upload className="h-4 w-4" /> {t("upload")}
               </Button>
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bannerUrl">Banner URL</Label>
+            <Label htmlFor="bannerUrl">{t("bannerUrl")}</Label>
             <div className="flex gap-2">
               <Input
                 id="bannerUrl"
@@ -89,7 +91,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
                 className="flex-1"
               />
               <Button type="button" variant="neutral" size="sm" onClick={() => handleUpload("bannerUrl", "image/*")}>
-                <Upload className="h-4 w-4" /> Upload
+                <Upload className="h-4 w-4" /> {t("upload")}
               </Button>
             </div>
           </div>
@@ -98,7 +100,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
         {/* Colors */}
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="primaryColor">Primary Color</Label>
+            <Label htmlFor="primaryColor">{t("primaryColorLabel")}</Label>
             <div className="flex gap-2">
               <Input
                 id="primaryColor"
@@ -114,7 +116,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="secondaryColor">Secondary Color</Label>
+            <Label htmlFor="secondaryColor">{t("secondaryColorLabel")}</Label>
             <div className="flex gap-2">
               <Input
                 id="secondaryColor"
@@ -133,7 +135,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
 
         {/* Hashtag */}
         <div className="space-y-2">
-          <Label htmlFor="hashtag">Hashtag</Label>
+          <Label htmlFor="hashtag">{t("hashtagLabel")}</Label>
           <Input
             id="hashtag"
             value={branding.hashtag}
@@ -148,7 +150,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
         <div className="rounded-base border-2 border-border bg-card p-4 space-y-3">
           <div className="flex items-center gap-2">
             <Palette className="h-5 w-5 text-main" />
-            <p className="font-bold text-foreground">Color Preview</p>
+            <p className="font-bold text-foreground">{t("colorPreview")}</p>
           </div>
           <div className="flex gap-4">
             <div className="space-y-1 text-center">
@@ -156,7 +158,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
                 className="h-16 w-16 rounded-base border-2 border-border"
                 style={{ backgroundColor: branding.primaryColor }}
               />
-              <p className="text-xs text-muted-foreground">Primary</p>
+              <p className="text-xs text-muted-foreground">{t("primaryLabel")}</p>
               <p className="text-xs font-bold text-foreground">
                 {branding.primaryColor}
               </p>
@@ -166,7 +168,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
                 className="h-16 w-16 rounded-base border-2 border-border"
                 style={{ backgroundColor: branding.secondaryColor }}
               />
-              <p className="text-xs text-muted-foreground">Secondary</p>
+              <p className="text-xs text-muted-foreground">{t("secondaryLabel")}</p>
               <p className="text-xs font-bold text-foreground">
                 {branding.secondaryColor}
               </p>
@@ -178,7 +180,7 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
                   background: `linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor})`,
                 }}
               />
-              <p className="text-xs text-muted-foreground">Gradient</p>
+              <p className="text-xs text-muted-foreground">{t("gradientLabel")}</p>
             </div>
           </div>
           {branding.hashtag && (
@@ -189,33 +191,33 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
 
       {/* Social Share Preview */}
       <div className="space-y-2">
-        <Label>Social Share Preview</Label>
+        <Label>{t("socialPreview")}</Label>
         <div className="rounded-base border-2 border-border p-4 text-center" style={{ background: branding.primaryColor || "#7C3AED" }}>
           <p className="text-white font-black text-lg">{data.title || "Your Hackathon"}</p>
           <p className="text-white/80 text-sm">{data.tagline || "Tagline"}</p>
           <p className="text-white/60 text-xs mt-2">ramsha.net</p>
         </div>
-        <p className="text-xs text-muted-foreground">This preview shows how your hackathon appears when shared on social media.</p>
+        <p className="text-xs text-muted-foreground">{t("socialPreviewDesc")}</p>
       </div>
 
       {/* Embed Banner Code */}
       <div className="space-y-2">
-        <Label>Embed Banner Code</Label>
+        <Label>{t("embedBannerCode")}</Label>
         <div className="rounded-base border-2 border-border bg-card p-3">
           <code className="text-xs text-muted-foreground break-all">
             {`<a href="https://ramsha.net/hackathon/${data.slug || 'your-hackathon'}"><img src="${branding.bannerUrl || 'https://ramsha.net/banner.png'}" alt="${data.title}" style="max-width:100%"></a>`}
           </code>
         </div>
         <Button variant="neutral" size="sm" onClick={() => navigator.clipboard?.writeText(`<a href="https://ramsha.net/hackathon/${data.slug || 'your-hackathon'}"><img src="${branding.bannerUrl || 'https://ramsha.net/banner.png'}" alt="${data.title}" style="max-width:100%"></a>`)}>
-          Copy Embed Code
+          {t("copyEmbedCode")}
         </Button>
       </div>
 
       {/* AI Page Builder launcher */}
       <div className="rounded-base border-2 border-dashed border-border p-4 text-center">
-        <p className="text-sm text-muted-foreground mb-3">Want full control? Design your hackathon page with our AI-powered builder.</p>
+        <p className="text-sm text-muted-foreground mb-3">{t("pageBuilderDesc")}</p>
         <Button variant="neutral" onClick={() => setShowBuilder(true)}>
-          <Wand2 className="h-4 w-4" /> Launch AI Page Builder
+          <Wand2 className="h-4 w-4" /> {t("launchPageBuilder")}
         </Button>
       </div>
 
@@ -232,9 +234,9 @@ export default function BrandingStep({ data, onChange, onNext, onBack }) {
 
       <div className="flex justify-between">
         <Button variant="neutral" onClick={onBack}>
-          ← Back
+          {t("backBtn")}
         </Button>
-        <Button onClick={onNext}>Next: Review →</Button>
+        <Button onClick={onNext}>{t("nextSponsors")}</Button>
       </div>
     </div>
   );

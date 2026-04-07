@@ -30,13 +30,12 @@ export function DashboardLayout({ children, activePath }) {
     { icon: LayoutDashboard, label: t('dashboard'), path: isOrgRole ? '/dashboard' : '/home' },
     // Participant
     ...(isPartRole ? [
-      { icon: Compass, label: 'Explore', path: '/explore' },
+      { icon: Compass, label: t('explore'), path: '/explore' },
     ] : []),
     // Organizer
     ...(isOrgRole ? [
-      { icon: Trophy, label: 'My Events', path: '/hackathons' },
+      { icon: Trophy, label: t('myEvents'), path: '/hackathons' },
       { icon: CalendarDays, label: t('sessions'), path: '/sessions' },
-      { icon: Users, label: t('events'), path: '/events' },
     ] : []),
     // Shared
     { icon: Settings, label: t('settingsNav'), path: '/settings' },

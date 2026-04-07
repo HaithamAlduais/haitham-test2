@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/context/LanguageContext";
 
 function Section({ title, children }) {
   return (
@@ -11,23 +12,24 @@ function Section({ title, children }) {
 }
 
 export default function ReviewPublishStep({ data, onBack, onPublish, onSaveDraft, submitting, error }) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Review & Publish</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("reviewTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Review your hackathon settings before creating it.
+          {t("reviewDesc")}
         </p>
       </div>
 
       <div className="space-y-4">
-        <Section title="Basic Info">
+        <Section title={t("sectionBasicInfo")}>
           <p className="text-lg font-black text-foreground">{data.title || "Untitled"}</p>
           {data.tagline && <p className="text-sm text-muted-foreground">{data.tagline}</p>}
           {data.description && <p className="text-sm text-foreground mt-2">{data.description}</p>}
         </Section>
 
-        <Section title="Schedule">
+        <Section title={t("sectionSchedule")}>
           {Object.entries(data.schedule || {}).map(([key, val]) => (
             val ? (
               <div key={key} className="flex justify-between text-sm">
@@ -39,11 +41,11 @@ export default function ReviewPublishStep({ data, onBack, onPublish, onSaveDraft
             ) : null
           ))}
           {!Object.values(data.schedule || {}).some(Boolean) && (
-            <p className="text-sm text-muted-foreground italic">No dates set</p>
+            <p className="text-sm text-muted-foreground italic">{t("noDatesSet")}</p>
           )}
         </Section>
 
-        <Section title={`Tracks (${(data.tracks || []).length})`}>
+        <Section title={`${t("sectionTracks")} (${(data.tracks || []).length})`}>
           {(data.tracks || []).length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {data.tracks.map((t, i) => (
@@ -51,11 +53,11 @@ export default function ReviewPublishStep({ data, onBack, onPublish, onSaveDraft
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No tracks defined</p>
+            <p className="text-sm text-muted-foreground italic">{t("noTracksDefined")}</p>
           )}
         </Section>
 
-        <Section title={`Judging Criteria (${(data.judgingCriteria || []).length})`}>
+        <Section title={`${t("sectionJudging")} (${(data.judgingCriteria || []).length})`}>
           {(data.judgingCriteria || []).length > 0 ? (
             <div className="space-y-1">
               {data.judgingCriteria.map((c, i) => (
@@ -66,11 +68,11 @@ export default function ReviewPublishStep({ data, onBack, onPublish, onSaveDraft
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No criteria defined</p>
+            <p className="text-sm text-muted-foreground italic">{t("noCriteriaDefined")}</p>
           )}
         </Section>
 
-        <Section title={`Prizes (${(data.prizes || []).length})`}>
+        <Section title={`${t("sectionPrizes")} (${(data.prizes || []).length})`}>
           {(data.prizes || []).length > 0 ? (
             <div className="space-y-1">
               {data.prizes.map((p, i) => (
@@ -81,16 +83,16 @@ export default function ReviewPublishStep({ data, onBack, onPublish, onSaveDraft
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No prizes defined</p>
+            <p className="text-sm text-muted-foreground italic">{t("noPrizesDefined")}</p>
           )}
         </Section>
 
-        <Section title="Team Settings">
+        <Section title={t("sectionTeamSettings")}>
           <div className="text-sm space-y-1">
-            <p>Team size: {data.settings?.teamSizeMin || 2}–{data.settings?.teamSizeMax || 5} members</p>
-            <p>Solo allowed: {data.settings?.allowSolo ? "Yes" : "No"}</p>
-            <p>Max registrants: {data.settings?.maxRegistrants || 500}</p>
-            <p>Approval required: {data.registrationSettings?.requireApproval !== false ? "Yes" : "No"}</p>
+            <p>{t("teamSizeRange")}: {data.settings?.teamSizeMin || 2}–{data.settings?.teamSizeMax || 5}</p>
+            <p>{t("soloAllowed")}: {data.settings?.allowSolo ? t("yesLabel") : t("noLabel")}</p>
+            <p>{t("maxRegistrants")}: {data.settings?.maxRegistrants || 500}</p>
+            <p>{t("approvalRequired")}: {data.registrationSettings?.requireApproval !== false ? t("yesLabel") : t("noLabel")}</p>
           </div>
         </Section>
       </div>
@@ -103,14 +105,14 @@ export default function ReviewPublishStep({ data, onBack, onPublish, onSaveDraft
 
       <div className="flex flex-col sm:flex-row justify-between gap-3">
         <Button variant="neutral" onClick={onBack} disabled={submitting}>
-          ← Back
+          {t("backBtn")}
         </Button>
         <div className="flex gap-3">
           <Button variant="neutral" onClick={onSaveDraft} disabled={submitting}>
-            {submitting ? "Saving..." : "Save as Draft"}
+            {submitting ? t("savingDraft") : t("saveDraft")}
           </Button>
           <Button onClick={onPublish} disabled={submitting}>
-            {submitting ? "Publishing..." : "Publish Hackathon"}
+            {submitting ? t("publishing") : t("publishHackathon")}
           </Button>
         </div>
       </div>

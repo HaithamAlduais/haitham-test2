@@ -16,19 +16,19 @@ import SponsorsStep from "./steps/SponsorsStep";
 import TeamSettingsStep from "./steps/TeamSettingsStep";
 import ReviewPublishStep from "./steps/ReviewPublishStep";
 
-const STEPS = [
-  { key: "basic", label: "Basics" },
-  { key: "schedule", label: "Schedule" },
-  { key: "screening", label: "AI Screening" },
-  { key: "tracks", label: "Tracks" },
-  { key: "judging", label: "Judging" },
-  { key: "prizes", label: "Prizes" },
-  { key: "teams", label: "Teams" },
-  { key: "workback", label: "Planning" },
-  { key: "resources", label: "Resources" },
-  { key: "branding", label: "Branding" },
-  { key: "sponsors", label: "Sponsors" },
-  { key: "review", label: "Review" },
+const STEP_KEYS = [
+  { key: "basic", labelKey: "stepBasics" },
+  { key: "schedule", labelKey: "stepSchedule" },
+  { key: "screening", labelKey: "stepAIScreening" },
+  { key: "tracks", labelKey: "stepTracks" },
+  { key: "judging", labelKey: "stepJudging" },
+  { key: "prizes", labelKey: "stepPrizes" },
+  { key: "teams", labelKey: "stepTeams" },
+  { key: "workback", labelKey: "stepPlanning" },
+  { key: "resources", labelKey: "stepResources" },
+  { key: "branding", labelKey: "stepBranding" },
+  { key: "sponsors", labelKey: "stepSponsors" },
+  { key: "review", labelKey: "stepReview" },
 ];
 
 const INITIAL_DATA = {
@@ -75,7 +75,7 @@ export default function HackathonCreationWizard({ onClose }) {
   const [success, setSuccess] = useState(null);
 
   const updateData = (partial) => setData((prev) => ({ ...prev, ...partial }));
-  const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  const next = () => setStep((s) => Math.min(s + 1, STEP_KEYS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const handleSubmit = async (publish) => {
@@ -99,7 +99,7 @@ export default function HackathonCreationWizard({ onClose }) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
         <header className="h-16 border-b-2 border-border bg-secondary-background flex items-center justify-between px-6 md:px-12 shrink-0">
-          <h1 className="font-heading font-black text-lg text-foreground">Hackathon Created</h1>
+          <h1 className="font-heading font-black text-lg text-foreground">{t("hackathonCreated")}</h1>
         </header>
         <div className="flex-1 flex items-center justify-center px-6">
           <div className="text-center max-w-md space-y-6">
@@ -109,21 +109,21 @@ export default function HackathonCreationWizard({ onClose }) {
             <h2 className="text-2xl font-black text-foreground">{data.title}</h2>
             <p className="text-muted-foreground">
               {success.isPublic
-                ? "Your hackathon is live and visible in the marketplace!"
-                : "Your hackathon has been saved as a draft."}
+                ? t("hackathonLive")
+                : t("savedAsDraft")}
             </p>
             {success.isPublic && (
               <div className="rounded-base border-2 border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground mb-1">Share link:</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("shareLink")}</p>
                 <p className="text-sm font-bold text-main break-all">{shareUrl}</p>
               </div>
             )}
             <div className="flex gap-3 justify-center">
               <Button variant="neutral" onClick={() => { navigator.clipboard?.writeText(shareUrl); }}>
-                Copy Link
+                {t("copyLink")}
               </Button>
               <Button onClick={() => { onClose?.(); navigate("/dashboard"); }}>
-                Go to Dashboard
+                {t("goToDashboardHack")}
               </Button>
             </div>
           </div>
@@ -158,10 +158,10 @@ export default function HackathonCreationWizard({ onClose }) {
     <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="h-16 border-b-2 border-border bg-secondary-background flex items-center justify-between px-6 md:px-12 shrink-0">
-        <h1 className="font-heading font-black text-lg text-foreground">Create Hackathon</h1>
+        <h1 className="font-heading font-black text-lg text-foreground">{t("createHackathon")}</h1>
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-muted-foreground">
-            Step {step + 1} of {STEPS.length}
+            {t("stepXofY").replace("{x}", step + 1).replace("{y}", STEP_KEYS.length)}
           </span>
           <button
             onClick={onClose}
@@ -175,7 +175,7 @@ export default function HackathonCreationWizard({ onClose }) {
       {/* Step indicator */}
       <div className="border-b-2 border-border bg-secondary-background px-6 md:px-12 py-3 shrink-0">
         <div className="max-w-5xl mx-auto flex gap-1 overflow-x-auto">
-          {STEPS.map((s, i) => (
+          {STEP_KEYS.map((s, i) => (
             <button
               key={s.key}
               onClick={() => i < step && setStep(i)}
@@ -188,7 +188,7 @@ export default function HackathonCreationWizard({ onClose }) {
                   : "bg-background text-muted-foreground border-transparent cursor-not-allowed"
               }`}
             >
-              {i + 1}. {s.label}
+              {i + 1}. {t(s.labelKey)}
             </button>
           ))}
         </div>
@@ -198,7 +198,7 @@ export default function HackathonCreationWizard({ onClose }) {
       <div className="h-1 bg-muted">
         <div
           className="h-full bg-main transition-all duration-300"
-          style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+          style={{ width: `${((step + 1) / STEP_KEYS.length) * 100}%` }}
         />
       </div>
 

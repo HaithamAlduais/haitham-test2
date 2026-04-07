@@ -1,17 +1,19 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
-const FIELDS = [
-  { key: "registrationOpen", label: "Registration Opens" },
-  { key: "registrationClose", label: "Registration Closes" },
-  { key: "submissionDeadline", label: "Submission Deadline" },
-  { key: "judgingStart", label: "Judging Starts" },
-  { key: "judgingEnd", label: "Judging Ends" },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ScheduleStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const schedule = data.schedule || {};
+
+  const FIELDS = [
+    { key: "registrationOpen", label: t("regOpen") },
+    { key: "registrationClose", label: t("regClose") },
+    { key: "submissionDeadline", label: t("submissionDeadline") },
+    { key: "judgingStart", label: t("judgingStart") },
+    { key: "judgingEnd", label: t("judgingEnd") },
+  ];
 
   const updateSchedule = (key, value) => {
     onChange({ schedule: { ...schedule, [key]: value } });
@@ -20,9 +22,9 @@ export default function ScheduleStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Schedule</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("scheduleTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Set the key dates and deadlines for your hackathon.
+          {t("scheduleDesc")}
         </p>
       </div>
 
@@ -42,10 +44,10 @@ export default function ScheduleStep({ data, onChange, onNext, onBack }) {
 
       <div className="flex justify-between">
         <Button variant="neutral" onClick={onBack}>
-          ← Back
+          {t("backBtn")}
         </Button>
         <Button onClick={onNext}>
-          Next: Tracks →
+          {t("nextAIScreening")}
         </Button>
       </div>
     </div>

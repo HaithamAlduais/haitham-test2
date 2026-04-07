@@ -3,22 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Trophy, Award, Star, Users, Heart } from "lucide-react";
-
-const CATEGORIES = [
-  { value: "overall", label: "Overall", icon: Trophy, color: "text-yellow-500" },
-  { value: "per_track", label: "Per Track", icon: Award, color: "text-blue-500" },
-  { value: "special", label: "Special Award", icon: Star, color: "text-purple-500" },
-  { value: "sponsor", label: "Sponsor Prize", icon: Users, color: "text-green-500" },
-  { value: "popular_choice", label: "Popular Choice", icon: Heart, color: "text-red-500" },
-];
-
-const TYPES = [
-  { value: "cash", label: "Cash" },
-  { value: "credits", label: "Credits / Subscription" },
-  { value: "access", label: "Exclusive Access" },
-  { value: "badges", label: "Digital Badge" },
-  { value: "physical", label: "Physical Prize" },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const EMPTY_PRIZE = {
   place: "", title: "", description: "", value: "",
@@ -26,10 +11,27 @@ const EMPTY_PRIZE = {
 };
 
 export default function PrizesStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const prizes = data.prizes || [];
   const tracks = data.tracks || [];
   const sponsors = data.sponsors || [];
   const [newPrize, setNewPrize] = useState(EMPTY_PRIZE);
+
+  const CATEGORIES = [
+    { value: "overall", label: t("catOverall"), icon: Trophy, color: "text-yellow-500" },
+    { value: "per_track", label: t("catPerTrack"), icon: Award, color: "text-blue-500" },
+    { value: "special", label: t("catSpecial"), icon: Star, color: "text-purple-500" },
+    { value: "sponsor", label: t("catSponsor"), icon: Users, color: "text-green-500" },
+    { value: "popular_choice", label: t("catPopularChoice"), icon: Heart, color: "text-red-500" },
+  ];
+
+  const TYPES = [
+    { value: "cash", label: t("typeCash") },
+    { value: "credits", label: t("typeCredits") },
+    { value: "access", label: t("typeAccess") },
+    { value: "badges", label: t("typeBadges") },
+    { value: "physical", label: t("typePhysical") },
+  ];
 
   const addPrize = () => {
     if (!newPrize.title.trim()) return;
@@ -59,9 +61,9 @@ export default function PrizesStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Prizes & Awards</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("prizesTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Define prizes across multiple categories: overall winners, per-track awards, special recognition, sponsor prizes, and popular choice.
+          {t("prizesDesc")}
         </p>
       </div>
 
@@ -126,7 +128,7 @@ export default function PrizesStep({ data, onChange, onNext, onBack }) {
 
       {/* Add new prize form */}
       <div className="rounded-base border-2 border-dashed border-border p-4 space-y-4">
-        <p className="text-sm font-bold text-foreground">Add a Prize</p>
+        <p className="text-sm font-bold text-foreground">{t("addPrize2")}</p>
 
         {/* Category selector */}
         <div className="flex flex-wrap gap-2">
@@ -148,25 +150,25 @@ export default function PrizesStep({ data, onChange, onNext, onBack }) {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label>Place</Label>
+            <Label>{t("prizePlace")}</Label>
             <Input value={newPrize.place} onChange={(e) => setNewPrize({ ...newPrize, place: e.target.value })} placeholder="1st Place" />
           </div>
           <div className="space-y-1">
-            <Label>Title *</Label>
+            <Label>{t("prizeTitleLabel")}</Label>
             <Input value={newPrize.title} onChange={(e) => setNewPrize({ ...newPrize, title: e.target.value })} placeholder="Grand Prize" />
           </div>
           <div className="space-y-1">
-            <Label>Value</Label>
+            <Label>{t("prizeValueLabel")}</Label>
             <Input value={newPrize.value} onChange={(e) => setNewPrize({ ...newPrize, value: e.target.value })} placeholder="$5,000" />
           </div>
           <div className="space-y-1">
-            <Label>Prize Type</Label>
+            <Label>{t("prizeType")}</Label>
             <select
               value={newPrize.type}
               onChange={(e) => setNewPrize({ ...newPrize, type: e.target.value })}
               className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm font-medium"
             >
-              {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {TYPES.map((tp) => <option key={tp.value} value={tp.value}>{tp.label}</option>)}
             </select>
           </div>
 
@@ -198,13 +200,13 @@ export default function PrizesStep({ data, onChange, onNext, onBack }) {
         </div>
 
         <Button variant="neutral" size="sm" onClick={addPrize} disabled={!newPrize.title.trim()}>
-          <Plus className="h-4 w-4" /> Add Prize
+          <Plus className="h-4 w-4" /> {t("addPrizeBtn")}
         </Button>
       </div>
 
       <div className="flex justify-between">
-        <Button variant="neutral" onClick={onBack}>← Back</Button>
-        <Button onClick={onNext}>Next: Team Settings →</Button>
+        <Button variant="neutral" onClick={onBack}>{t("backBtn")}</Button>
+        <Button onClick={onNext}>{t("nextTeams")}</Button>
       </div>
     </div>
   );

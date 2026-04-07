@@ -5,17 +5,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, FileText, Package } from "lucide-react";
-
-const RESOURCE_TYPES = [
-  { value: "template", label: "Template" },
-  { value: "dataset", label: "Dataset" },
-  { value: "api_doc", label: "API Documentation" },
-  { value: "guide", label: "Guide" },
-  { value: "tool", label: "Tool" },
-  { value: "credits", label: "Credits" },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ResourcesStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const RESOURCE_TYPES = [
+    { value: "template", label: t("resTemplate") },
+    { value: "dataset", label: t("resDataset") },
+    { value: "api_doc", label: t("resApiDoc") },
+    { value: "guide", label: t("resGuide") },
+    { value: "tool", label: t("resTool") },
+    { value: "credits", label: t("resCredits") },
+  ];
   const resources = data.resources || [];
   const [newResource, setNewResource] = useState({
     title: "",
@@ -55,10 +56,9 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Resources</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("resourcesTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add resources and starter kit items for participants. Toggle auto-send to
-          include in the acceptance starter kit.
+          {t("resourcesDesc")}
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
                     htmlFor={`auto-send-${idx}`}
                     className="text-xs cursor-pointer"
                   >
-                    Include in starter kit
+                    {t("includeInStarterKit")}
                   </Label>
                 </div>
               </div>
@@ -116,7 +116,7 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
       <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label>Title *</Label>
+            <Label>{t("resourceTitleLabel")}</Label>
             <Input
               value={newResource.title}
               onChange={(e) =>
@@ -126,7 +126,7 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
             />
           </div>
           <div className="space-y-1">
-            <Label>Type</Label>
+            <Label>{t("resourceTypeLabel")}</Label>
             <select
               value={newResource.type}
               onChange={(e) =>
@@ -134,15 +134,15 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
               }
               className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {RESOURCE_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {RESOURCE_TYPES.map((rt) => (
+                <option key={rt.value} value={rt.value}>
+                  {rt.label}
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-1">
-            <Label>URL</Label>
+            <Label>{t("resourceUrlLabel")}</Label>
             <Input
               value={newResource.url}
               onChange={(e) =>
@@ -152,7 +152,7 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
             />
           </div>
           <div className="space-y-1">
-            <Label>Description</Label>
+            <Label>{t("resourceDescLabel")}</Label>
             <Input
               value={newResource.description}
               onChange={(e) =>
@@ -171,7 +171,7 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
             }
           />
           <Label htmlFor="new-auto-send" className="text-sm cursor-pointer">
-            Auto-send on acceptance
+            {t("autoSendOnAccept")}
           </Label>
         </div>
         <Button
@@ -180,7 +180,7 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
           onClick={addResource}
           disabled={!newResource.title.trim()}
         >
-          <Plus className="h-4 w-4" /> Add Resource
+          <Plus className="h-4 w-4" /> {t("addResource")}
         </Button>
       </div>
 
@@ -189,10 +189,10 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
         <div className="rounded-base border-2 border-border bg-card p-4 space-y-3">
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-main" />
-            <p className="font-bold text-foreground">Starter Kit Preview</p>
+            <p className="font-bold text-foreground">{t("starterKitPreview")}</p>
           </div>
           <p className="text-sm text-muted-foreground">
-            These resources will be automatically sent to accepted participants.
+            {t("starterKitAutoSend")}
           </p>
           <ul className="space-y-1">
             {starterKitItems.map((item) => (
@@ -210,9 +210,9 @@ export default function ResourcesStep({ data, onChange, onNext, onBack }) {
 
       <div className="flex justify-between">
         <Button variant="neutral" onClick={onBack}>
-          ← Back
+          {t("backBtn")}
         </Button>
-        <Button onClick={onNext}>Next: Branding →</Button>
+        <Button onClick={onNext}>{t("nextBranding")}</Button>
       </div>
     </div>
   );

@@ -3,48 +3,50 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Monitor, MapPin, Laptop } from "lucide-react";
-
-const FORMAT_OPTIONS = [
-  { value: "online", label: "Online", icon: Monitor },
-  { value: "in-person", label: "In-Person", icon: MapPin },
-  { value: "hybrid", label: "Hybrid", icon: Laptop },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function BasicInfoStep({ data, onChange, onNext }) {
+  const { t } = useLanguage();
   const canProceed = data.title.trim().length > 0;
+
+  const FORMAT_OPTIONS = [
+    { value: "online", label: t("formatOnline"), icon: Monitor },
+    { value: "in-person", label: t("formatInPerson"), icon: MapPin },
+    { value: "hybrid", label: t("formatHybrid"), icon: Laptop },
+  ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Basic Information</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("basicInfoTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Give your hackathon a name and describe what it's about.
+          {t("basicInfoDesc")}
         </p>
       </div>
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="title">Hackathon Title *</Label>
+          <Label htmlFor="title">{t("hackathonTitleLabel")}</Label>
           <Input
             id="title"
             value={data.title}
             onChange={(e) => onChange({ title: e.target.value })}
-            placeholder="e.g. AI Innovation Hackathon 2026"
+            placeholder={t("hackathonTitlePlaceholder")}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="tagline">Tagline</Label>
+          <Label htmlFor="tagline">{t("taglineLabel")}</Label>
           <Input
             id="tagline"
             value={data.tagline}
             onChange={(e) => onChange({ tagline: e.target.value })}
-            placeholder="A short catchy phrase for your hackathon"
+            placeholder={t("taglinePlaceholder")}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Format</Label>
+          <Label>{t("formatLabel")}</Label>
           <div className="flex gap-2">
             {FORMAT_OPTIONS.map(({ value, label, icon: Icon }) => (
               <button
@@ -65,23 +67,23 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">{t("descriptionLabel2")}</Label>
           <Textarea
             id="description"
             value={data.description}
             onChange={(e) => onChange({ description: e.target.value })}
-            placeholder="Describe the hackathon, its goals, target audience, and what participants will build..."
+            placeholder={t("descriptionPlaceholder2")}
             rows={5}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="rules">Rules & Code of Conduct</Label>
+          <Label htmlFor="rules">{t("rulesTitle")}</Label>
           <Textarea
             id="rules"
             value={data.rules}
             onChange={(e) => onChange({ rules: e.target.value })}
-            placeholder="Participation rules, code of conduct, submission guidelines..."
+            placeholder={t("rulesPlaceholder")}
             rows={4}
           />
         </div>
@@ -89,7 +91,7 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
 
       <div className="flex justify-end">
         <Button onClick={onNext} disabled={!canProceed}>
-          Next: Schedule →
+          {t("nextSchedule")}
         </Button>
       </div>
     </div>

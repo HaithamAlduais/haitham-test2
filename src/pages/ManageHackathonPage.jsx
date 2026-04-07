@@ -40,7 +40,7 @@ function StatCard({ label, value, icon: Icon }) {
 export default function ManageHackathonPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { dir } = useLanguage();
+  const { t, dir } = useLanguage();
 
   const [hackathon, setHackathon] = useState(null);
   const [registrations, setRegistrations] = useState([]);
@@ -142,10 +142,10 @@ export default function ManageHackathonPage() {
   }[hackathon.status];
 
   const nextStatusLabel = {
-    published: "Publish",
-    active: "Start Hackathon",
-    judging: "Begin Judging",
-    completed: "Complete",
+    published: t("publishStatus"),
+    active: t("startHackathon"),
+    judging: t("beginJudging"),
+    completed: t("completeStatus"),
   };
 
   return (
@@ -156,7 +156,7 @@ export default function ManageHackathonPage() {
           onClick={() => navigate("/hackathons")}
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Hackathons
+          <ArrowLeft className="h-4 w-4" /> {t("backToHackathons")}
         </button>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -172,17 +172,17 @@ export default function ManageHackathonPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/page-builder`)}>
-              <Layout className="h-4 w-4" /> Page Builder
+              <Layout className="h-4 w-4" /> {t("pageBuilder")}
             </Button>
             <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/analytics`)}>
-              <BarChart3 className="h-4 w-4" /> Analytics
+              <BarChart3 className="h-4 w-4" /> {t("analytics")}
             </Button>
             {nextStatus && (
               <Button
                 onClick={() => updateHackathonStatus(nextStatus)}
                 disabled={actionLoading === "status"}
               >
-                {actionLoading === "status" ? "Updating..." : nextStatusLabel[nextStatus] || `Move to ${nextStatus}`}
+                {actionLoading === "status" ? t("updating") : nextStatusLabel[nextStatus] || nextStatus}
               </Button>
             )}
           </div>
@@ -191,10 +191,10 @@ export default function ManageHackathonPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Registrations" value={registrations.length} icon={FileText} />
-        <StatCard label="Pending" value={pendingCount} icon={Clock} />
-        <StatCard label="Accepted" value={acceptedCount} icon={CheckCircle} />
-        <StatCard label="Teams" value={teams.length} icon={Users} />
+        <StatCard label={t("registrationsLabel")} value={registrations.length} icon={FileText} />
+        <StatCard label={t("pendingLabel")} value={pendingCount} icon={Clock} />
+        <StatCard label={t("acceptedLabel")} value={acceptedCount} icon={CheckCircle} />
+        <StatCard label={t("teamsLabel")} value={teams.length} icon={Users} />
       </div>
 
       <Separator className="mb-6" />
@@ -202,9 +202,9 @@ export default function ManageHackathonPage() {
       {/* Tabs */}
       <Tabs defaultValue="registrations">
         <TabsList className="mb-4">
-          <TabsTrigger value="registrations">Registrations ({registrations.length})</TabsTrigger>
-          <TabsTrigger value="teams">Teams ({teams.length})</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="registrations">{t("registrationsTab")} ({registrations.length})</TabsTrigger>
+          <TabsTrigger value="teams">{t("teamsTab")} ({teams.length})</TabsTrigger>
+          <TabsTrigger value="settings">{t("settingsTab")}</TabsTrigger>
         </TabsList>
 
         {/* ── Registrations Tab ── */}
@@ -225,28 +225,28 @@ export default function ManageHackathonPage() {
               disabled={aiScreening}
             >
               <Sparkles className="h-4 w-4" />
-              {aiScreening ? "Screening..." : "AI Screen Pending"}
+              {aiScreening ? t("screening") : t("aiScreenPending")}
             </Button>
           </div>
 
           {selectedRegs.length > 0 && (
             <div className="flex items-center gap-3 mb-4 p-3 rounded-base border-2 border-main bg-main/5">
-              <span className="text-sm font-bold">{selectedRegs.length} selected</span>
+              <span className="text-sm font-bold">{selectedRegs.length} {t("selected")}</span>
               <Button size="sm" onClick={() => bulkUpdateStatus("accepted")} disabled={actionLoading === "bulk"}>
-                Accept All
+                {t("acceptAll")}
               </Button>
               <Button size="sm" variant="destructive" onClick={() => bulkUpdateStatus("rejected")} disabled={actionLoading === "bulk"}>
-                Reject All
+                {t("rejectAll")}
               </Button>
               <Button size="sm" variant="neutral" onClick={() => setSelectedRegs([])}>
-                Clear
+                {t("clear")}
               </Button>
             </div>
           )}
 
           {registrations.length === 0 ? (
             <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
-              <p className="text-muted-foreground">No registrations yet.</p>
+              <p className="text-muted-foreground">{t("noRegistrationsYet")}</p>
             </div>
           ) : (
             <div className="rounded-base border-2 border-border overflow-hidden">
@@ -261,11 +261,11 @@ export default function ManageHackathonPage() {
                         className="rounded"
                       />
                     </TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>AI Score</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-end">Actions</TableHead>
+                    <TableHead>{t("emailCol")}</TableHead>
+                    <TableHead>{t("statusCol")}</TableHead>
+                    <TableHead>{t("aiScoreCol")}</TableHead>
+                    <TableHead>{t("dateCol")}</TableHead>
+                    <TableHead className="text-end">{t("actionsCol")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -337,7 +337,7 @@ export default function ManageHackathonPage() {
         <TabsContent value="teams">
           {teams.length === 0 ? (
             <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
-              <p className="text-muted-foreground">No teams formed yet.</p>
+              <p className="text-muted-foreground">{t("noTeamsYet")}</p>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -362,7 +362,7 @@ export default function ManageHackathonPage() {
         <TabsContent value="settings">
           <div className="space-y-4 max-w-2xl">
             <div className="rounded-base border-2 border-border p-4">
-              <h3 className="font-bold text-foreground mb-2">Hackathon Details</h3>
+              <h3 className="font-bold text-foreground mb-2">{t("hackathonDetails2")}</h3>
               <div className="space-y-2 text-sm">
                 <p><span className="text-muted-foreground">Title:</span> {hackathon.title}</p>
                 <p><span className="text-muted-foreground">Slug:</span> {hackathon.slug}</p>
@@ -373,22 +373,22 @@ export default function ManageHackathonPage() {
               </div>
             </div>
             <div className="rounded-base border-2 border-border p-4">
-              <h3 className="font-bold text-foreground mb-2">Public Link</h3>
+              <h3 className="font-bold text-foreground mb-2">{t("publicLink")}</h3>
               <p className="text-sm font-mono text-main break-all">
                 {window.location.origin}/event/{id}
               </p>
             </div>
             <div className="rounded-base border-2 border-border p-4">
-              <h3 className="font-bold text-foreground mb-2">Export Data (CSV)</h3>
+              <h3 className="font-bold text-foreground mb-2">{t("exportData")}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 <Button variant="neutral" size="sm" onClick={() => window.open(`/api/export/${id}/registrations`, '_blank')}>
-                  <Download className="h-3 w-3" /> Registrations
+                  <Download className="h-3 w-3" /> {t("exportRegistrations")}
                 </Button>
                 <Button variant="neutral" size="sm" onClick={() => window.open(`/api/export/${id}/teams`, '_blank')}>
-                  <Download className="h-3 w-3" /> Teams
+                  <Download className="h-3 w-3" /> {t("exportTeams")}
                 </Button>
                 <Button variant="neutral" size="sm" onClick={() => window.open(`/api/export/${id}/submissions`, '_blank')}>
-                  <Download className="h-3 w-3" /> Submissions
+                  <Download className="h-3 w-3" /> {t("exportSubmissions")}
                 </Button>
               </div>
             </div>

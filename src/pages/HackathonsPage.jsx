@@ -42,25 +42,25 @@ export default function HackathonsPage() {
     <DashboardLayout activePath="/hackathons">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-heading text-3xl font-black text-foreground">My Events</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your hackathons, workshops, seminars, and more</p>
+          <h1 className="font-heading text-3xl font-black text-foreground">{t("myEventsTitle")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("myEventsSubtitle")}</p>
         </div>
         <Button onClick={() => navigate("/events/create")}>
-          <Plus className="h-4 w-4" /> Create Event
+          <Plus className="h-4 w-4" /> {t("createEvent")}
         </Button>
       </div>
 
       {/* Type filter */}
       <div className="flex flex-wrap gap-1.5 mb-6">
-        {["all", "hackathon", "workshop", "seminar", "training", "conference"].map((t) => (
+        {["all", "hackathon", "workshop", "seminar", "training", "conference"].map((tp) => (
           <Button
-            key={t}
-            variant={typeFilter === t ? "default" : "neutral"}
+            key={tp}
+            variant={typeFilter === tp ? "default" : "neutral"}
             size="sm"
-            onClick={() => setTypeFilter(t)}
+            onClick={() => setTypeFilter(tp)}
             className="capitalize"
           >
-            {t === "all" ? "All Types" : `${TYPE_ICON[t] || ""} ${t}`}
+            {tp === "all" ? t("allTypes") : `${TYPE_ICON[tp] || ""} ${tp}`}
           </Button>
         ))}
       </div>
@@ -73,9 +73,9 @@ export default function HackathonsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 rounded-base border-2 border-dashed border-border">
-          <p className="text-muted-foreground mb-4">{typeFilter === "all" ? "No events yet." : `No ${typeFilter} events yet.`}</p>
+          <p className="text-muted-foreground mb-4">{t("noEventsYetHack")}</p>
           <Button onClick={() => navigate("/events/create")}>
-            <Plus className="h-4 w-4" /> Create Your First Event
+            <Plus className="h-4 w-4" /> {t("createFirstEventHack")}
           </Button>
         </div>
       ) : (
@@ -102,14 +102,14 @@ export default function HackathonsPage() {
                 )}
                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" /> {h.registrationCount || 0} registrations
+                    <Users className="h-3 w-3" /> {h.registrationCount || 0} {t("registrations")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" /> {h.teamCount || 0} teams
+                    <Users className="h-3 w-3" /> {h.teamCount || 0} {t("teams")}
                   </span>
                   {h.schedule?.registrationClose && (
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> Closes {new Date(h.schedule.registrationClose).toLocaleDateString()}
+                      <Calendar className="h-3 w-3" /> {t("closes")} {new Date(h.schedule.registrationClose).toLocaleDateString()}
                     </span>
                   )}
                 </div>

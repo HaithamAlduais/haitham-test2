@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Brain } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const DEFAULT_CONFIG = {
   enabled: false,
@@ -15,6 +16,7 @@ const DEFAULT_CONFIG = {
 };
 
 export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const config = { ...DEFAULT_CONFIG, ...data.aiScreeningConfig };
   const [newCriterion, setNewCriterion] = useState({ name: "", weight: 50, description: "" });
 
@@ -37,9 +39,9 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">AI Screening</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("aiScreeningTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure AI-powered screening to automatically evaluate and filter applications.
+          {t("aiScreeningDesc")}
         </p>
       </div>
 
@@ -51,7 +53,7 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
           onCheckedChange={(checked) => updateConfig({ enabled: checked })}
         />
         <Label htmlFor="ai-enabled" className="cursor-pointer font-bold">
-          Enable AI Screening
+          {t("enableAIScreening")}
         </Label>
       </div>
 
@@ -60,7 +62,7 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
           {/* Thresholds */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="autoAccept">Auto-Accept Threshold (0-100)</Label>
+              <Label htmlFor="autoAccept">{t("autoAcceptLabel")}</Label>
               <Input
                 id="autoAccept"
                 type="number"
@@ -72,11 +74,11 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Applications scoring above this are automatically accepted.
+                {t("autoAcceptDesc")}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="autoReject">Auto-Reject Threshold (0-100)</Label>
+              <Label htmlFor="autoReject">{t("autoRejectLabel")}</Label>
               <Input
                 id="autoReject"
                 type="number"
@@ -88,30 +90,30 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Applications scoring below this are automatically rejected.
+                {t("autoRejectDesc")}
               </p>
             </div>
           </div>
 
           {/* Language preference */}
           <div className="space-y-2">
-            <Label htmlFor="language">Language Preference</Label>
+            <Label htmlFor="language">{t("languagePreference")}</Label>
             <select
               id="language"
               value={config.language}
               onChange={(e) => updateConfig({ language: e.target.value })}
               className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="en">English</option>
-              <option value="ar">Arabic</option>
-              <option value="both">Both (English & Arabic)</option>
+              <option value="en">{t("langEnglish")}</option>
+              <option value="ar">{t("langArabic")}</option>
+              <option value="both">{t("langBoth")}</option>
             </select>
           </div>
 
           {/* Criteria list */}
           {config.criteria.length > 0 && (
             <div className="space-y-3">
-              <Label className="text-base font-bold">Screening Criteria</Label>
+              <Label className="text-base font-bold">{t("screeningCriteria")}</Label>
               {config.criteria.map((criterion, idx) => (
                 <div
                   key={criterion.id || idx}
@@ -144,17 +146,17 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
           <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label>Criterion Name *</Label>
+                <Label>{t("criterionNameLabel")}</Label>
                 <Input
                   value={newCriterion.name}
                   onChange={(e) =>
                     setNewCriterion({ ...newCriterion, name: e.target.value })
                   }
-                  placeholder="e.g. Technical Feasibility"
+                  placeholder={t("criterionNamePlaceholder")}
                 />
               </div>
               <div className="space-y-1">
-                <Label>Weight (1-100)</Label>
+                <Label>{t("weightLabel")}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -167,13 +169,13 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Description</Label>
+              <Label>{t("criterionDescLabel")}</Label>
               <Textarea
                 value={newCriterion.description}
                 onChange={(e) =>
                   setNewCriterion({ ...newCriterion, description: e.target.value })
                 }
-                placeholder="What should the AI evaluate for this criterion?"
+                placeholder={t("criterionDescPlaceholder")}
                 rows={2}
               />
             </div>
@@ -183,7 +185,7 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
               onClick={addCriterion}
               disabled={!newCriterion.name.trim()}
             >
-              <Plus className="h-4 w-4" /> Add Criterion
+              <Plus className="h-4 w-4" /> {t("addCriterion")}
             </Button>
           </div>
         </div>
@@ -191,9 +193,9 @@ export default function AIScreeningStep({ data, onChange, onNext, onBack }) {
 
       <div className="flex justify-between">
         <Button variant="neutral" onClick={onBack}>
-          ← Back
+          {t("backBtn")}
         </Button>
-        <Button onClick={onNext}>Next: Workback Schedule →</Button>
+        <Button onClick={onNext}>{t("nextWorkbackSchedule")}</Button>
       </div>
     </div>
   );

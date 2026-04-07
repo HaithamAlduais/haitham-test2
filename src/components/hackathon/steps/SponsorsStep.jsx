@@ -4,16 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Building2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const TIERS = ["platinum", "gold", "silver", "bronze", "partner"];
-
-const TIER_LABELS = {
-  platinum: "Platinum",
-  gold: "Gold",
-  silver: "Silver",
-  bronze: "Bronze",
-  partner: "Partner",
-};
 
 const TIER_COLORS = {
   platinum: "bg-slate-100 text-slate-800",
@@ -32,6 +25,14 @@ const EMPTY_SPONSOR = {
 };
 
 export default function SponsorsStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const TIER_LABELS = {
+    platinum: t("tierPlatinum"),
+    gold: t("tierGold"),
+    silver: t("tierSilver"),
+    bronze: t("tierBronze"),
+    partner: t("tierPartner"),
+  };
   const sponsors = data.sponsors || [];
   const [newSponsor, setNewSponsor] = useState({ ...EMPTY_SPONSOR });
 
@@ -60,9 +61,9 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Sponsors</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("sponsorsTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add sponsors and partners supporting this hackathon. This is optional.
+          {t("sponsorsDesc")}
         </p>
       </div>
 
@@ -114,7 +115,7 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
       <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label>Sponsor Name *</Label>
+            <Label>{t("sponsorNameLabel")}</Label>
             <Input
               value={newSponsor.name}
               onChange={(e) => setNewSponsor({ ...newSponsor, name: e.target.value })}
@@ -122,7 +123,7 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
             />
           </div>
           <div className="space-y-1">
-            <Label>Tier</Label>
+            <Label>{t("tierLabel")}</Label>
             <select
               value={newSponsor.tier}
               onChange={(e) => setNewSponsor({ ...newSponsor, tier: e.target.value })}
@@ -136,7 +137,7 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
             </select>
           </div>
           <div className="space-y-1">
-            <Label>Logo URL</Label>
+            <Label>{t("sponsorLogoLabel")}</Label>
             <Input
               value={newSponsor.logoUrl}
               onChange={(e) => setNewSponsor({ ...newSponsor, logoUrl: e.target.value })}
@@ -144,7 +145,7 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
             />
           </div>
           <div className="space-y-1">
-            <Label>Website URL</Label>
+            <Label>{t("sponsorWebsiteLabel")}</Label>
             <Input
               value={newSponsor.websiteUrl}
               onChange={(e) => setNewSponsor({ ...newSponsor, websiteUrl: e.target.value })}
@@ -153,7 +154,7 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
           </div>
         </div>
         <div className="space-y-1">
-          <Label>Description</Label>
+          <Label>{t("sponsorDescLabel")}</Label>
           <Textarea
             value={newSponsor.description}
             onChange={(e) => setNewSponsor({ ...newSponsor, description: e.target.value })}
@@ -162,14 +163,14 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
           />
         </div>
         <Button variant="neutral" size="sm" onClick={addSponsor} disabled={!newSponsor.name.trim()}>
-          <Plus className="h-4 w-4" /> Add Sponsor
+          <Plus className="h-4 w-4" /> {t("addSponsor")}
         </Button>
       </div>
 
       {/* Preview grouped by tier */}
       {Object.keys(grouped).length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-black text-foreground">Preview</h3>
+          <h3 className="text-lg font-black text-foreground">{t("sponsorsPreview")}</h3>
           {TIERS.map((tier) => {
             const tierSponsors = grouped[tier];
             if (!tierSponsors) return null;
@@ -205,9 +206,9 @@ export default function SponsorsStep({ data, onChange, onNext, onBack }) {
 
       <div className="flex justify-between">
         <Button variant="neutral" onClick={onBack}>
-          &larr; Back
+          {t("backBtn")}
         </Button>
-        <Button onClick={onNext}>Next: Review &rarr;</Button>
+        <Button onClick={onNext}>{t("nextReviewStep")}</Button>
       </div>
     </div>
   );

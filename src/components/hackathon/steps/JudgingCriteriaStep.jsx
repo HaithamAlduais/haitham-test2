@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const DEFAULT_CRITERIA = [
   { name: "Innovation", weight: 25, maxScore: 5 },
@@ -13,6 +14,7 @@ const DEFAULT_CRITERIA = [
 ];
 
 export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
   const criteria = data.judgingCriteria || [];
   const [newCriterion, setNewCriterion] = useState({ name: "", weight: 20, maxScore: 5 });
 
@@ -37,15 +39,15 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black text-foreground">Judging Criteria</h2>
+        <h2 className="text-2xl font-black text-foreground">{t("judgingTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Define how submissions will be scored. Weights should add up to 100.
+          {t("judgingDesc")}
         </p>
       </div>
 
       {criteria.length === 0 && (
         <Button variant="neutral" onClick={loadDefaults}>
-          Load Default Criteria
+          {t("loadDefaults")}
         </Button>
       )}
 
@@ -58,7 +60,7 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
             >
               <span className="flex-1 font-bold text-foreground text-sm">{c.name}</span>
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                Weight: {c.weight}% &middot; Max: {c.maxScore}
+                {t("weightColLabel")}: {c.weight}% &middot; {t("maxScoreLabel")}: {c.maxScore}
               </span>
               <button
                 onClick={() => removeCriterion(idx)}
@@ -69,7 +71,7 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
             </div>
           ))}
           <p className={`text-sm font-bold ${totalWeight === 100 ? "text-main" : "text-destructive"}`}>
-            Total weight: {totalWeight}%{totalWeight !== 100 && " (should be 100%)"}
+            {t("totalWeight")}: {totalWeight}%{totalWeight !== 100 && ` ${t("shouldBe100")}`}
           </p>
         </div>
       )}
@@ -78,15 +80,15 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
       <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1 sm:col-span-1">
-            <Label>Criterion Name</Label>
+            <Label>{t("judgingCriterionName")}</Label>
             <Input
               value={newCriterion.name}
               onChange={(e) => setNewCriterion({ ...newCriterion, name: e.target.value })}
-              placeholder="e.g. Innovation"
+              placeholder={t("judgingCriterionPlaceholder")}
             />
           </div>
           <div className="space-y-1">
-            <Label>Weight (%)</Label>
+            <Label>{t("weightPercent")}</Label>
             <Input
               type="number"
               min={1}
@@ -96,7 +98,7 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
             />
           </div>
           <div className="space-y-1">
-            <Label>Max Score</Label>
+            <Label>{t("maxScoreLabel")}</Label>
             <Input
               type="number"
               min={1}
@@ -107,15 +109,15 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
           </div>
         </div>
         <Button variant="neutral" size="sm" onClick={addCriterion} disabled={!newCriterion.name.trim()}>
-          <Plus className="h-4 w-4" /> Add Criterion
+          <Plus className="h-4 w-4" /> {t("addCriterion")}
         </Button>
       </div>
 
       {/* Popular Choice Voting Toggle */}
       <div className="rounded-base border-2 border-border bg-card p-4 flex items-center justify-between">
         <div>
-          <p className="font-bold text-foreground text-sm">Popular Choice Voting</p>
-          <p className="text-xs text-muted-foreground">Enable public voting after submission deadline. Community picks their favorite.</p>
+          <p className="font-bold text-foreground text-sm">{t("popularChoice")}</p>
+          <p className="text-xs text-muted-foreground">{t("popularChoiceDesc")}</p>
         </div>
         <button
           onClick={() => onChange({ enablePopularVote: !data.enablePopularVote })}
@@ -126,8 +128,8 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
       </div>
 
       <div className="flex justify-between">
-        <Button variant="neutral" onClick={onBack}>← Back</Button>
-        <Button onClick={onNext}>Next: Prizes →</Button>
+        <Button variant="neutral" onClick={onBack}>{t("backBtn")}</Button>
+        <Button onClick={onNext}>{t("nextPrizes")}</Button>
       </div>
     </div>
   );

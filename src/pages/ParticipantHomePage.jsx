@@ -49,35 +49,35 @@ const ParticipantHomePage = () => {
     <DashboardLayout activePath="/home">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-heading text-3xl font-black text-foreground">My Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your events, teams, and submissions</p>
+          <h1 className="font-heading text-3xl font-black text-foreground">{t("myDashboard")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("myDashboardSubtitle")}</p>
         </div>
         <Button onClick={() => navigate("/explore")}>
-          <Search className="h-4 w-4" /> Explore Events
+          <Search className="h-4 w-4" /> {t("exploreEvents")}
         </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="rounded-base border-2 border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Calendar className="h-3.5 w-3.5" /> Events</div>
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Calendar className="h-3.5 w-3.5" /> {t("eventsStatLabel")}</div>
           <p className="text-2xl font-black text-foreground">{myEvents.length}</p>
         </div>
         <div className="rounded-base border-2 border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Users className="h-3.5 w-3.5" /> Teams</div>
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Users className="h-3.5 w-3.5" /> {t("teamsStatLabel")}</div>
           <p className="text-2xl font-black text-foreground">{myTeams.length}</p>
         </div>
         <div className="rounded-base border-2 border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Trophy className="h-3.5 w-3.5" /> Submissions</div>
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Trophy className="h-3.5 w-3.5" /> {t("submissionsStatLabel")}</div>
           <p className="text-2xl font-black text-foreground">{mySubmissions.length}</p>
         </div>
       </div>
 
       <Tabs defaultValue="events">
         <TabsList className="mb-4">
-          <TabsTrigger value="events">My Events ({myEvents.length})</TabsTrigger>
-          <TabsTrigger value="teams">My Teams ({myTeams.length})</TabsTrigger>
-          <TabsTrigger value="submissions">My Submissions ({mySubmissions.length})</TabsTrigger>
+          <TabsTrigger value="events">{t("myEventsTab")} ({myEvents.length})</TabsTrigger>
+          <TabsTrigger value="teams">{t("myTeams")} ({myTeams.length})</TabsTrigger>
+          <TabsTrigger value="submissions">{t("mySubmissions")} ({mySubmissions.length})</TabsTrigger>
         </TabsList>
 
         {/* Events Tab */}
@@ -86,8 +86,8 @@ const ParticipantHomePage = () => {
             <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 rounded-base border-2 border-border bg-card animate-pulse" />)}</div>
           ) : myEvents.length === 0 ? (
             <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
-              <p className="text-muted-foreground mb-4">You haven't registered for any events yet.</p>
-              <Button onClick={() => navigate("/explore")}>Browse Events</Button>
+              <p className="text-muted-foreground mb-4">{t("noEventsRegistered")}</p>
+              <Button onClick={() => navigate("/explore")}>{t("browseEvents")}</Button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -118,7 +118,7 @@ const ParticipantHomePage = () => {
         <TabsContent value="teams">
           {myTeams.length === 0 ? (
             <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
-              <p className="text-muted-foreground">You're not part of any teams yet.</p>
+              <p className="text-muted-foreground">{t("noTeamsJoined")}</p>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -143,7 +143,7 @@ const ParticipantHomePage = () => {
         <TabsContent value="submissions">
           {mySubmissions.length === 0 ? (
             <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
-              <p className="text-muted-foreground">No submissions yet.</p>
+              <p className="text-muted-foreground">{t("noSubmissionsYet")}</p>
             </div>
           ) : (
             <div className="space-y-3">

@@ -15,6 +15,7 @@ const submissionRoutes = require("./submissions");
 const judgingRoutes = require("./judging");
 const announcementRoutes = require("./announcements");
 const workshopRoutes = require("./workshops");
+const aiRoutes = require("./ai");
 
 const router = express.Router();
 
@@ -36,5 +37,6 @@ router.use("/:id/submissions", submissionRoutes);
 router.use("/:id", judgingRoutes);
 router.use("/:id/announcements", announcementRoutes);
 router.use("/:id/workshops", workshopRoutes);
+router.use("/:id", aiRoutes);
 
 module.exports = router;

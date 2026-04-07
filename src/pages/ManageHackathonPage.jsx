@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles } from "lucide-react";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 const STATUS_VARIANT = {
@@ -48,6 +48,7 @@ export default function ManageHackathonPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedRegs, setSelectedRegs] = useState([]);
+  const [aiScreening, setAiScreening] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -200,6 +201,26 @@ export default function ManageHackathonPage() {
 
         {/* ── Registrations Tab ── */}
         <TabsContent value="registrations">
+          {/* AI Screening button */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={async () => {
+                setAiScreening(true);
+                try {
+                  await apiPost(`/api/hackathons/${id}/ai/screen-all-registrations`);
+                  await fetchAll();
+                } catch { /* silently fail */ }
+                setAiScreening(false);
+              }}
+              disabled={aiScreening}
+            >
+              <Sparkles className="h-4 w-4" />
+              {aiScreening ? "Screening..." : "AI Screen Pending"}
+            </Button>
+          </div>
+
           {selectedRegs.length > 0 && (
             <div className="flex items-center gap-3 mb-4 p-3 rounded-base border-2 border-main bg-main/5">
               <span className="text-sm font-bold">{selectedRegs.length} selected</span>
@@ -234,6 +255,7 @@ export default function ManageHackathonPage() {
                     </TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>AI Score</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
@@ -254,6 +276,15 @@ export default function ManageHackathonPage() {
                         <Badge variant={STATUS_VARIANT[reg.status] || "outline"} className="capitalize">
                           {reg.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {reg.aiScore != null ? (
+                          <span className={`text-sm font-bold ${reg.aiScore >= 70 ? "text-main" : reg.aiScore >= 40 ? "text-foreground" : "text-destructive"}`}>
+                            {reg.aiScore}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {reg.createdAt?.toDate

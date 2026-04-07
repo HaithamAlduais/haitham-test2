@@ -84,9 +84,18 @@ export default function ExplorePage() {
 
   useEffect(() => {
     fetch("/api/events/public")
-      .then((res) => res.json())
-      .then((json) => setEvents(json.data || []))
-      .catch(() => setEvents([]))
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((json) => {
+        console.log("[Explore] Loaded events:", json.data?.length || 0);
+        setEvents(json.data || []);
+      })
+      .catch((err) => {
+        console.error("[Explore] Failed to load events:", err);
+        setEvents([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

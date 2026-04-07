@@ -72,9 +72,18 @@ export default function HackathonMarketplace() {
 
   useEffect(() => {
     fetch("/api/events/public")
-      .then((res) => res.json())
-      .then((json) => setHackathons(json.data || []))
-      .catch(() => setHackathons([]))
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((json) => {
+        console.log("[Marketplace] Loaded events:", json.data?.length || 0);
+        setHackathons(json.data || []);
+      })
+      .catch((err) => {
+        console.error("[Marketplace] Failed:", err);
+        setHackathons([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -5,7 +5,7 @@ import { Cell, Label, Pie, PieChart } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
-import { useAnimatedNumber } from "./useAnimatedNumber";
+import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
 import { getLandingCopy } from "./landingLocale";
 
 const PIE_ROWS = [

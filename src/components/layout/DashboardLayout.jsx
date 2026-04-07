@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Bell, Search, Users } from 'lucide-react';
 

@@ -6,7 +6,7 @@ import { apiDelete, apiGet, apiPatch, apiPost } from "../utils/apiClient";
 import { formatDate } from "../utils/formatDate";
 import EventCreationFlow from "../components/events/EventCreationFlow";
 import NewSessionModal from "../components/sessions/NewSessionModal";
-import { DashboardLayout } from "../components/DashboardLayout";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,

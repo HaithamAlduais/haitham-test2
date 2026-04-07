@@ -4,7 +4,7 @@ import { useLanguage } from "../context/LanguageContext";
 import ProfileInfoSection from "../components/settings/ProfileInfoSection";
 import ChangePasswordSection from "../components/settings/ChangePasswordSection";
 import DeleteAccountSection from "../components/settings/DeleteAccountSection";
-import { DashboardLayout } from "../components/DashboardLayout";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 const ProfileSettingsPage = () => {
   const { currentUser } = useAuth();

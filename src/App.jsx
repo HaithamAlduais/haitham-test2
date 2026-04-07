@@ -15,7 +15,6 @@ import EmailVerifiedPage from './pages/EmailVerifiedPage'
 import VerifyEmailHoldingPage from './pages/VerifyEmailHoldingPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
-import PublicEventPage from './pages/PublicEventPage'
 
 // Protects routes by authentication and optionally by role.
 // If not authenticated, redirects to /login.
@@ -66,7 +65,6 @@ function App() {
       <Route path="/email-verified" element={<EmailVerifiedPage />} />
       <Route path="/verify-email" element={<VerifyEmailHoldingPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/events/p/:slug" element={<PublicEventPage />} />
 
       {/* Participant routes */}
       <Route

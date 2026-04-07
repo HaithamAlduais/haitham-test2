@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { apiGet, apiPost } from '../utils/apiClient';
 import useHomepageStats from '../hooks/useHomepageStats';
 import NewSessionModal from '../components/sessions/NewSessionModal';
-import { DashboardLayout } from '../components/DashboardLayout';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';

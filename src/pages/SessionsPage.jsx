@@ -5,7 +5,7 @@ import { useSessions } from "../hooks/useSessions";
 import SessionCard from "../components/sessions/SessionCard";
 import SessionCardSkeleton from "../components/sessions/SessionCardSkeleton";
 import NewSessionModal from "../components/sessions/NewSessionModal";
-import { DashboardLayout } from "../components/DashboardLayout";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 

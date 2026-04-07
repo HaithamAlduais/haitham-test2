@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiPatch, apiPost } from "../../utils/api";
+import { apiPatch, apiPost } from "../../utils/apiClient";
 
 /**
  * MaterialManager

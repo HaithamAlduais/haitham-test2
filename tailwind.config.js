@@ -41,30 +41,12 @@ export default {
         reverseBoxShadowY: "calc(-1 * var(--neo-v))",
       },
       colors: {
-        // Fixed palette (raw values — use for accents, branding, badges)
-        'ink':       '#0A0A0A',
-        'slate':     '#1C1F26',
-        'steel':     '#2E3440',
+        // Fixed accent palette
         'smoke':     '#3A3F4B',
-        'ghost':     '#F0EFE9',
-        'mist':      '#A8B0BC',
-        'bone':      '#F5F0E8',
-        'linen':     '#EAE4D9',
-        'parchment': '#DDD7CB',
-        'stone':     '#B5AFA6',
-        'charcoal':  '#0A0A0A',
-        'ash':       '#6B6560',
         'teal':      '#00E5CC',
         'amber':     '#FFB800',
         'red':       '#FF3B30',
-        // Theme-aware semantic tokens (auto-switch with data-theme)
-        'th-base':    'var(--bg-base)',
-        'th-surface': 'var(--bg-surface)',
-        'th-card':    'var(--bg-card)',
-        'th-border':  'var(--border)',
-        'th-text':    'var(--text-primary)',
-        'th-muted':   'var(--text-secondary)',
-        // Shadcn/UI semantic tokens
+        // Semantic tokens (driven by CSS variables in index.css)
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -107,11 +89,6 @@ export default {
         },
       },
       boxShadow: {
-        'teal':       '4px 4px 0px #00E5CC',
-        'amber':      '4px 4px 0px #FFB800',
-        'card-dark':  '3px 3px 0px #3A3F4B',
-        'card-light': '3px 3px 0px #B5AFA6',
-        'card':       'var(--shadow-card)',
         neo: "var(--neo-shadow)",
         "neo-sm": "var(--neo-shadow-sm)",
         "neo-lg": "var(--neo-shadow-lg)",

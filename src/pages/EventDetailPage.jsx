@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
-import { apiGet, apiPost } from "../utils/api";
+import { apiGet, apiPost } from "../utils/apiClient";
 import { useEventSessions } from "../hooks/useEventSessions";
 import SessionCard from "../components/sessions/SessionCard";
 import SessionCardSkeleton from "../components/sessions/SessionCardSkeleton";

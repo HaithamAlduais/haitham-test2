@@ -334,7 +334,7 @@ const LiveMonitoringPage = () => {
           onClick={() => setShowCloseConfirm(false)}
         >
           <div
-            className="w-full max-w-sm mx-4 border-2 border-border bg-background p-6 shadow-card"
+            className="w-full max-w-sm mx-4 border-2 border-border bg-background p-6 shadow-shadow"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-heading font-black text-lg text-foreground mb-2">

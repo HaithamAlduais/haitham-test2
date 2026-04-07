@@ -24,7 +24,7 @@ import {
   LANDING_NAV_SECTION_IDS,
   useLandingActiveSection,
   useLandingHeaderDocked,
-} from "./useLandingHeaderScroll";
+} from "../hooks/useLandingHeaderScroll";
 
 function NavLink({ href, label, active }) {
   return (

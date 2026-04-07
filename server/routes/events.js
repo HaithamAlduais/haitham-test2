@@ -1,18 +1,11 @@
 const express = require("express");
 const requireRole = require("../middleware/requireRole");
 const { listEvents, getEvent, listEventSessions, createEvent, updateEvent } = require("../controllers/eventController");
-const { createHackathonEvent, getPublicEventPage } = require("../controllers/hackathonController");
 
 const router = express.Router();
 
 // POST /api/events — Create a new event
 router.post("/", requireRole("Provider"), createEvent);
-
-// POST /api/events/hackathon — Create a hackathon event with generated landing page
-router.post("/hackathon", requireRole("Provider"), createHackathonEvent);
-
-// GET /api/events/page/:slug — Public: serve generated event page by slug
-router.get("/page/:slug", getPublicEventPage);
 
 // GET /api/events — List all events owned by the Provider
 router.get("/", requireRole("Provider"), listEvents);

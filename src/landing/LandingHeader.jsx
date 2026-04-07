@@ -85,7 +85,7 @@ export function LandingHeader() {
       >
         {/* Logo */}
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
-          <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-8 w-8 object-contain dark:invert" />
+          <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-12 w-12 object-contain dark:invert" />
           <span className="font-heading text-lg font-black tracking-tight text-foreground">
             Ramsha
           </span>

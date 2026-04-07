@@ -50,7 +50,7 @@ const VerifyEmailHoldingPage = () => {
         <div className="relative z-10 w-full max-w-md rounded-2xl border-2 border-border bg-secondary-background p-8 text-center shadow-shadow sm:p-10">
           {/* Logo */}
           <div className="mb-8 flex items-center justify-center gap-2">
-            <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-12 w-12 object-contain dark:invert" />
+            <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-16 w-16 object-contain dark:invert" />
             <span className="text-lg font-black tracking-tight text-foreground">ramsha</span>
           </div>
 

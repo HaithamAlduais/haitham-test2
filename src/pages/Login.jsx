@@ -231,7 +231,7 @@ const Login = () => {
         <div className="flex min-h-screen items-center justify-center px-4" dir={dir}>
           <div className="w-full max-w-md rounded-2xl border-2 border-border bg-secondary-background p-8 shadow-shadow">
             <div className="mb-6 flex items-center gap-2">
-              <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-12 w-12 object-contain dark:invert" />
+              <img src="/ramsha-logo-black.png" alt="Ramsha" className="h-16 w-16 object-contain dark:invert" />
               <span className="text-lg font-black tracking-tight text-foreground">ramsha</span>
             </div>
 

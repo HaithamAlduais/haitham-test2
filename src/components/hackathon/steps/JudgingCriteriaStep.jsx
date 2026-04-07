@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { suggestForStep } from "@/services/wizardAIService";
 
 const DEFAULT_CRITERIA = [
   { name: "Innovation", weight: 25, maxScore: 5 },
@@ -17,6 +18,7 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
   const { t } = useLanguage();
   const criteria = data.judgingCriteria || [];
   const [newCriterion, setNewCriterion] = useState({ name: "", weight: 20, maxScore: 5 });
+  const [suggesting, setSuggesting] = useState(false);
 
   const addCriterion = () => {
     if (!newCriterion.name.trim()) return;
@@ -34,15 +36,34 @@ export default function JudgingCriteriaStep({ data, onChange, onNext, onBack }) 
     });
   };
 
+  const handleAISuggest = async () => {
+    setSuggesting(true);
+    try {
+      const result = await suggestForStep("judging", data);
+      if (result && Array.isArray(result)) {
+        const withIds = result.map((c) => ({ ...c, id: crypto.randomUUID() }));
+        onChange({ judgingCriteria: withIds });
+      }
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
   const totalWeight = criteria.reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-black text-foreground">{t("judgingTitle")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("judgingDesc")}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-foreground">{t("judgingTitle")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("judgingDesc")}
+          </p>
+        </div>
+        <Button variant="neutral" size="sm" onClick={handleAISuggest} disabled={suggesting}>
+          <Sparkles className="h-4 w-4" />
+          {suggesting ? "..." : t("aiSuggest")}
+        </Button>
       </div>
 
       {criteria.length === 0 && (

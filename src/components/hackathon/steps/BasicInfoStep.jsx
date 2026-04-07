@@ -2,18 +2,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Monitor, MapPin, Laptop } from "lucide-react";
+import { Monitor, MapPin, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function BasicInfoStep({ data, onChange, onNext }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const canProceed = data.title.trim().length > 0;
+  const isRTL = language === "ar";
 
   const FORMAT_OPTIONS = [
     { value: "online", label: t("formatOnline"), icon: Monitor },
     { value: "in-person", label: t("formatInPerson"), icon: MapPin },
-    { value: "hybrid", label: t("formatHybrid"), icon: Laptop },
   ];
+
+  const location = data.location || { name: "", address: "", lat: null, lng: null };
+
+  const updateLocation = (field, value) => {
+    onChange({ location: { ...location, [field]: value } });
+  };
 
   return (
     <div className="space-y-8">
@@ -25,6 +31,7 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
       </div>
 
       <div className="space-y-5">
+        {/* Title */}
         <div className="space-y-2">
           <Label htmlFor="title">{t("hackathonTitleLabel")}</Label>
           <Input
@@ -35,6 +42,7 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
           />
         </div>
 
+        {/* Tagline */}
         <div className="space-y-2">
           <Label htmlFor="tagline">{t("taglineLabel")}</Label>
           <Input
@@ -45,6 +53,7 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
           />
         </div>
 
+        {/* Format */}
         <div className="space-y-2">
           <Label>{t("formatLabel")}</Label>
           <div className="flex gap-2">
@@ -66,6 +75,43 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
           </div>
         </div>
 
+        {/* Format-specific sections */}
+        {(data.format || "online") === "in-person" && (
+          <div className="space-y-4 rounded-base border-2 border-border bg-card p-4">
+            <div className="space-y-2">
+              <Label htmlFor="locationName">{t("locationNameLabel")}</Label>
+              <Input
+                id="locationName"
+                value={location.name}
+                onChange={(e) => updateLocation("name", e.target.value)}
+                placeholder={t("locationNamePlaceholder")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="locationAddress">{t("locationAddressLabel")}</Label>
+              <Input
+                id="locationAddress"
+                value={location.address}
+                onChange={(e) => updateLocation("address", e.target.value)}
+                placeholder={t("locationAddressPlaceholder")}
+              />
+            </div>
+            <div className="flex items-center justify-center rounded-base border-2 border-dashed border-border bg-muted/50 p-8 text-muted-foreground">
+              <MapPin className="h-5 w-5 mr-2" />
+              {t("mapPlaceholder")}
+            </div>
+          </div>
+        )}
+
+        {(data.format || "online") === "online" && (
+          <div className="rounded-base border-2 border-border bg-card p-4">
+            <p className="text-sm text-muted-foreground">
+              {t("discordAutoCreate")}
+            </p>
+          </div>
+        )}
+
+        {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description">{t("descriptionLabel2")}</Label>
           <Textarea
@@ -77,6 +123,43 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
           />
         </div>
 
+        {/* Target Audience */}
+        <div className="space-y-2">
+          <Label htmlFor="targetAudience">{t("targetAudienceLabel")}</Label>
+          <Textarea
+            id="targetAudience"
+            value={data.targetAudience || ""}
+            onChange={(e) => onChange({ targetAudience: e.target.value })}
+            placeholder={t("targetAudiencePlaceholder")}
+            rows={3}
+          />
+        </div>
+
+        {/* Why Participate */}
+        <div className="space-y-2">
+          <Label htmlFor="whyParticipate">{t("whyParticipateLabel")}</Label>
+          <Textarea
+            id="whyParticipate"
+            value={data.whyParticipate || ""}
+            onChange={(e) => onChange({ whyParticipate: e.target.value })}
+            placeholder={t("whyParticipatePlaceholder")}
+            rows={3}
+          />
+        </div>
+
+        {/* How It Works */}
+        <div className="space-y-2">
+          <Label htmlFor="howItWorks">{t("howItWorksLabel")}</Label>
+          <Textarea
+            id="howItWorks"
+            value={data.howItWorks || ""}
+            onChange={(e) => onChange({ howItWorks: e.target.value })}
+            placeholder={t("howItWorksPlaceholder")}
+            rows={3}
+          />
+        </div>
+
+        {/* Rules */}
         <div className="space-y-2">
           <Label htmlFor="rules">{t("rulesTitle")}</Label>
           <Textarea
@@ -87,11 +170,24 @@ export default function BasicInfoStep({ data, onChange, onNext }) {
             rows={4}
           />
         </div>
+
+        {/* Contact Email */}
+        <div className="space-y-2">
+          <Label htmlFor="contactEmail">{t("contactEmailLabel")}</Label>
+          <Input
+            id="contactEmail"
+            type="email"
+            value={data.contactEmail || ""}
+            onChange={(e) => onChange({ contactEmail: e.target.value })}
+            placeholder={t("contactEmailPlaceholder")}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={onNext} disabled={!canProceed}>
+        <Button onClick={onNext} disabled={!canProceed} size="lg" className="gap-2">
           {t("nextSchedule")}
+          {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
         </Button>
       </div>
     </div>

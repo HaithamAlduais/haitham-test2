@@ -26,6 +26,7 @@ import ExplorePage from './pages/ExplorePage'
 import ProjectGalleryPage from './pages/ProjectGalleryPage'
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage'
 import WorkshopsListPage from './pages/WorkshopsPage'
+import WinnerAnnouncementPage from './pages/WinnerAnnouncementPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -176,6 +177,7 @@ function App() {
       <Route path="/event/:id/submit" element={<SubmissionFormPage />} />
       <Route path="/event/:id/gallery" element={<ProjectGalleryPage />} />
       <Route path="/event/:id/workshops" element={<WorkshopsListPage />} />
+      <Route path="/event/:id/winners" element={<WinnerAnnouncementPage />} />
 
       {/* Legacy hackathon routes (backward compat) */}
       <Route path="/hackathon/:slug" element={<HackathonPublicPage />} />

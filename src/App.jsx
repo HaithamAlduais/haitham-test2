@@ -21,6 +21,10 @@ import RegistrationFormPage from './pages/RegistrationFormPage'
 import TeamFormationPage from './pages/TeamFormationPage'
 import SubmissionFormPage from './pages/SubmissionFormPage'
 import JudgePortalPage from './pages/JudgePortalPage'
+import ExplorePage from './pages/ExplorePage'
+import ProjectGalleryPage from './pages/ProjectGalleryPage'
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage'
+import WorkshopsListPage from './pages/WorkshopsPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -163,11 +167,24 @@ function App() {
         }
       />
 
-      {/* Public hackathon pages */}
+      {/* Public pages */}
+      <Route path="/explore" element={<ExplorePage />} />
       <Route path="/hackathon/:slug" element={<HackathonPublicPage />} />
+      <Route path="/hackathon/:slug/gallery" element={<ProjectGalleryPage />} />
       <Route path="/hackathon/:slug/register" element={<RegistrationFormPage />} />
       <Route path="/hackathon/:slug/teams" element={<TeamFormationPage />} />
       <Route path="/hackathon/:slug/submit" element={<SubmissionFormPage />} />
+      <Route path="/hackathon/:slug/workshops" element={<WorkshopsListPage />} />
+
+      {/* Analytics */}
+      <Route
+        path="/hackathons/:id/analytics"
+        element={
+          <PrivateRoute requiredRole="Organizer">
+            <AnalyticsDashboardPage />
+          </PrivateRoute>
+        }
+      />
 
       {/* Judge routes */}
       <Route

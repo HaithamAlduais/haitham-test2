@@ -66,6 +66,7 @@ const hackathonRoutes = require('./routes/hackathons');
 const userRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/upload');
 const participantRoutes = require('./routes/participant');
+const exportRoutes = require('./routes/export');
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/events', eventRoutes);
@@ -73,6 +74,7 @@ app.use('/api/hackathons', hackathonRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/participant', participantRoutes);
+app.use('/api/export', exportRoutes);
 
 // A simple test route
 app.get('/api/test', (req, res) => {

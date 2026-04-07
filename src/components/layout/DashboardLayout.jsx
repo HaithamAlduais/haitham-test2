@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Bell, Search, Users, Trophy } from 'lucide-react';
+import { Zap, Globe, Moon, Sun, LayoutDashboard, CalendarDays, Settings, LogOut, Bell, Search, Users, Trophy, Compass } from 'lucide-react';
 
 /**
  * Shared dashboard shell: sidebar + top bar + mobile bottom nav.
@@ -21,11 +21,23 @@ export function DashboardLayout({ children, activePath }) {
   const userInitial = currentUser?.email?.[0]?.toUpperCase() ?? '?';
   const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || '';
 
+  const isOrgRole = userRole === 'Organizer' || userRole === 'Provider';
+  const isPartRole = userRole === 'Participant';
+
   const navItems = [
-    { icon: LayoutDashboard, label: t('dashboard'), path: '/dashboard' },
-    { icon: Trophy, label: 'My Events', path: '/hackathons' },
-    { icon: CalendarDays, label: t('sessions'), path: '/sessions' },
-    { icon: Users, label: t('events'), path: '/events' },
+    // Shared
+    { icon: LayoutDashboard, label: t('dashboard'), path: isOrgRole ? '/dashboard' : '/home' },
+    // Participant
+    ...(isPartRole ? [
+      { icon: Compass, label: 'Explore', path: '/explore' },
+    ] : []),
+    // Organizer
+    ...(isOrgRole ? [
+      { icon: Trophy, label: 'My Events', path: '/hackathons' },
+      { icon: CalendarDays, label: t('sessions'), path: '/sessions' },
+      { icon: Users, label: t('events'), path: '/events' },
+    ] : []),
+    // Shared
     { icon: Settings, label: t('settingsNav'), path: '/settings' },
   ];
 

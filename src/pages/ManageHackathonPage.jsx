@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles } from "lucide-react";
+import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles, Download, BarChart3 } from "lucide-react";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 const STATUS_VARIANT = {
@@ -170,14 +170,19 @@ export default function ManageHackathonPage() {
               <p className="text-sm text-muted-foreground mt-1">{hackathon.tagline}</p>
             )}
           </div>
-          {nextStatus && (
-            <Button
-              onClick={() => updateHackathonStatus(nextStatus)}
-              disabled={actionLoading === "status"}
-            >
-              {actionLoading === "status" ? "Updating..." : nextStatusLabel[nextStatus] || `Move to ${nextStatus}`}
+          <div className="flex gap-2">
+            <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/analytics`)}>
+              <BarChart3 className="h-4 w-4" /> Analytics
             </Button>
-          )}
+            {nextStatus && (
+              <Button
+                onClick={() => updateHackathonStatus(nextStatus)}
+                disabled={actionLoading === "status"}
+              >
+                {actionLoading === "status" ? "Updating..." : nextStatusLabel[nextStatus] || `Move to ${nextStatus}`}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -367,8 +372,22 @@ export default function ManageHackathonPage() {
             <div className="rounded-base border-2 border-border p-4">
               <h3 className="font-bold text-foreground mb-2">Public Link</h3>
               <p className="text-sm font-mono text-main break-all">
-                {window.location.origin}/hackathon/{hackathon.slug}
+                {window.location.origin}/event/{id}
               </p>
+            </div>
+            <div className="rounded-base border-2 border-border p-4">
+              <h3 className="font-bold text-foreground mb-2">Export Data (CSV)</h3>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <Button variant="neutral" size="sm" onClick={() => window.open(`/api/export/${id}/registrations`, '_blank')}>
+                  <Download className="h-3 w-3" /> Registrations
+                </Button>
+                <Button variant="neutral" size="sm" onClick={() => window.open(`/api/export/${id}/teams`, '_blank')}>
+                  <Download className="h-3 w-3" /> Teams
+                </Button>
+                <Button variant="neutral" size="sm" onClick={() => window.open(`/api/export/${id}/submissions`, '_blank')}>
+                  <Download className="h-3 w-3" /> Submissions
+                </Button>
+              </div>
             </div>
           </div>
         </TabsContent>

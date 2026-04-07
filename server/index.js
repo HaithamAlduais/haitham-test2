@@ -93,70 +93,41 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 
 app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organizer', 'Admin'), upload.single('file'), async (req, res) => {
   try {
+    console.log("[extract-from-file] Starting...", req.file?.originalname, req.file?.mimetype, req.file?.size);
+
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
 
-    // Extract text from file based on type
-    let extractedText = "";
-    const mime = req.file.mimetype;
-    const name = req.file.originalname.toLowerCase();
-
-    if (mime === "application/pdf" || name.endsWith(".pdf")) {
-      const pdfParse = require('pdf-parse');
-      const pdfData = await pdfParse(req.file.buffer);
-      extractedText = pdfData.text;
-    } else if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || name.endsWith(".docx")) {
-      const mammoth = require('mammoth');
-      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-      extractedText = result.value;
-    } else if (mime === "application/vnd.openxmlformats-officedocument.presentationml.presentation" || name.endsWith(".pptx")) {
-      // For PPTX, extract as raw text (basic)
-      const mammoth = require('mammoth');
-      try {
-        const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-        extractedText = result.value;
-      } catch {
-        extractedText = req.file.buffer.toString('utf8').replace(/[^\x20-\x7E\u0600-\u06FF\s]/g, ' ').substring(0, 5000);
-      }
-    } else if (mime === "text/plain" || name.endsWith(".txt")) {
-      extractedText = req.file.buffer.toString('utf8');
-    } else {
-      return res.status(400).json({ error: "Unsupported file type. Use PDF, DOCX, PPTX, or TXT." });
-    }
-
-    if (!extractedText || extractedText.trim().length < 10) {
-      return res.status(400).json({ error: "Could not extract text from file." });
-    }
-
-    // Upload file to Firebase Storage
+    // Upload file to Firebase Storage first
     let fileUrl = null;
     try {
       const bucket = admin.storage().bucket();
       const fileName = `hackathon-files/${req.uid}/${Date.now()}_${req.file.originalname}`;
-      const file = bucket.file(fileName);
-      await file.save(req.file.buffer, { contentType: req.file.mimetype });
-      const [url] = await file.getSignedUrl({ action: 'read', expires: '2030-01-01' });
+      const gcsFile = bucket.file(fileName);
+      await gcsFile.save(req.file.buffer, { contentType: req.file.mimetype });
+      const [url] = await gcsFile.getSignedUrl({ action: 'read', expires: '2030-01-01' });
       fileUrl = url;
+      console.log("[extract-from-file] File uploaded to storage:", fileName);
     } catch (uploadErr) {
-      console.warn("File upload to storage failed:", uploadErr.message);
+      console.warn("[extract-from-file] Storage upload failed:", uploadErr.message);
     }
 
-    // Send to Gemini to extract hackathon wizard data
+    // Send file directly to Gemini as inline data (no local parsing needed!)
+    // Gemini 2.0 Flash can read PDFs, DOCX, images, etc. natively
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `You are an AI assistant. Extract hackathon information from this document and return it as a JSON object that can auto-fill a hackathon creation form.
+    const fileBase64 = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype || 'application/octet-stream';
 
-DOCUMENT TEXT:
-${extractedText.substring(0, 15000)}
+    const prompt = `You are an AI assistant. Read this uploaded file and extract hackathon information. Return it as a JSON object.
 
 Return ONLY a valid JSON object with these fields (use empty string "" if not found, empty array [] for arrays):
 {
   "title": "hackathon title",
-  "tagline": "short catchy phrase",
   "description": "full description",
   "targetAudience": "who should participate",
   "format": "online" or "in-person",
@@ -166,21 +137,25 @@ Return ONLY a valid JSON object with these fields (use empty string "" if not fo
   "schedule": {
     "registrationOpen": "ISO datetime or empty",
     "registrationClose": "ISO datetime or empty",
-    "submissionDeadline": "ISO datetime or empty",
+    "hackathonStart": "ISO datetime or empty",
+    "hackathonEnd": "ISO datetime or empty",
     "judgingStart": "ISO datetime or empty",
     "judgingEnd": "ISO datetime or empty"
   },
   "tracks": [{ "name": "track name", "description": "description" }],
   "prizes": [{ "place": "1st", "title": "Grand Prize", "value": "$5000", "category": "overall", "type": "cash" }],
-  "judgingCriteria": [{ "name": "Innovation", "weight": 25, "maxScore": 5 }],
   "sponsors": [{ "name": "Sponsor", "tier": "gold" }],
-  "faq": [{ "question": "Q?", "answer": "A" }],
-  "settings": { "maxRegistrants": 500, "teamSizeMin": 2, "teamSizeMax": 5 },
-  "branding": { "primaryColor": "#7C3AED", "secondaryColor": "#00D4AA" }
+  "faq": [{ "question": "Q?", "answer": "A" }]
 }`;
 
-    const result = await model.generateContent(prompt);
+    console.log("[extract-from-file] Sending to Gemini...", mimeType, fileBase64.length, "bytes base64");
+
+    const result = await model.generateContent([
+      prompt,
+      { inlineData: { mimeType, data: fileBase64 } },
+    ]);
     const text = result.response.text();
+    console.log("[extract-from-file] Gemini response length:", text.length);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {

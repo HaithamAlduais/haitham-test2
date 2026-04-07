@@ -1,90 +1,172 @@
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { apiGet } from "@/utils/apiClient";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Users, FileText, Trophy, ArrowRight, Search } from "lucide-react";
 
-/**
- * ParticipantHomePage — landing page for Participant users in Ramsha.
- *
- * Provides session join functionality and account overview.
- * This is a placeholder that will be expanded with full Participant features.
- */
+const TYPE_ICON = { hackathon: "\u{1F3C6}", workshop: "\u{1F6E0}\u{FE0F}", seminar: "\u{1F3A4}", training: "\u{1F4DA}", conference: "\u{1F3AF}", other: "\u{2728}" };
+
+const STATUS_VARIANT = {
+  pending: "outline",
+  accepted: "success",
+  rejected: "destructive",
+  draft: "outline",
+  submitted: "success",
+  forming: "outline",
+  complete: "success",
+};
+
 const ParticipantHomePage = () => {
-  const { currentUser, logout } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [myEvents, setMyEvents] = useState([]);
+  const [myTeams, setMyTeams] = useState([]);
+  const [mySubmissions, setMySubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
+  const fetchAll = useCallback(async () => {
+    try {
+      const [events, teams, subs] = await Promise.all([
+        apiGet("/api/participant/my-events").catch(() => ({ data: [] })),
+        apiGet("/api/participant/my-teams").catch(() => ({ data: [] })),
+        apiGet("/api/participant/my-submissions").catch(() => ({ data: [] })),
+      ]);
+      setMyEvents(events.data || []);
+      setMyTeams(teams.data || []);
+      setMySubmissions(subs.data || []);
+    } catch { /* silently fail */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background bg-grid">
-      {/* ───── Navbar ───── */}
-      <header className="h-16 border-b-2 border-border bg-secondary-background flex items-center justify-between px-6 md:px-12 sticky top-0 z-40 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-foreground text-background font-heading font-black text-sm flex items-center justify-center">
-            R
-          </div>
-          <span className="font-heading font-black text-foreground">Ramsha</span>
+    <DashboardLayout activePath="/home">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-heading text-3xl font-black text-foreground">My Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Your events, teams, and submissions</p>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="hidden sm:inline font-mono text-sm text-muted-foreground">
-            {currentUser?.email}
-          </span>
-          <span className="border border-main text-main font-mono font-bold text-xs uppercase tracking-[0.12em] px-2 py-0.5">
-            Participant
-          </span>
-          <button
-            onClick={handleLogout}
-            className="font-mono font-bold text-xs uppercase tracking-[0.08em] border-2 border-destructive text-destructive px-3 py-1.5 hover:bg-destructive hover:text-background transition-colors duration-100"
-          >
-            {t('logOut')}
-          </button>
+        <Button onClick={() => navigate("/explore")}>
+          <Search className="h-4 w-4" /> Explore Events
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="rounded-base border-2 border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Calendar className="h-3.5 w-3.5" /> Events</div>
+          <p className="text-2xl font-black text-foreground">{myEvents.length}</p>
         </div>
-      </header>
-
-      {/* ───── Main Content ───── */}
-      <main className="flex-grow flex items-center justify-center px-6 py-12">
-        <div className="border-2 border-border bg-secondary-background p-12 text-center max-w-lg w-full">
-          <h1 className="font-heading font-black text-3xl text-foreground mb-4">
-            {t('welcomeParticipant')}
-          </h1>
-          <p className="font-mono text-sm text-muted-foreground leading-relaxed mb-6">
-            {t('signedInAs')}{" "}
-            <span className="text-foreground font-bold">
-              {currentUser?.email}
-            </span>
-            . {t('participantJoinHint')}
-          </p>
-          <p className="font-mono text-xs text-muted-foreground">
-            {t('participantComingSoon')}
-          </p>
+        <div className="rounded-base border-2 border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Users className="h-3.5 w-3.5" /> Teams</div>
+          <p className="text-2xl font-black text-foreground">{myTeams.length}</p>
         </div>
-      </main>
+        <div className="rounded-base border-2 border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Trophy className="h-3.5 w-3.5" /> Submissions</div>
+          <p className="text-2xl font-black text-foreground">{mySubmissions.length}</p>
+        </div>
+      </div>
 
-      {/* ───── Footer ───── */}
-      <footer className="mt-auto py-6 pb-20 md:pb-6 text-center">
-        <p className="font-mono text-xs text-muted-foreground">
-          &copy; {t('copyright')}
-        </p>
-      </footer>
+      <Tabs defaultValue="events">
+        <TabsList className="mb-4">
+          <TabsTrigger value="events">My Events ({myEvents.length})</TabsTrigger>
+          <TabsTrigger value="teams">My Teams ({myTeams.length})</TabsTrigger>
+          <TabsTrigger value="submissions">My Submissions ({mySubmissions.length})</TabsTrigger>
+        </TabsList>
 
-      {/* ───── Mobile Bottom Nav ───── */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t-2 border-border bg-secondary-background flex">
-        <button
-          className="flex-1 min-h-[44px] py-2 font-mono font-bold text-xs uppercase tracking-[0.08em] text-center text-main border-t-[3px] border-t-main -mt-[2px]"
-        >
-          {t('dashboard')}
-        </button>
-        <button
-          onClick={() => navigate('/settings')}
-          className="flex-1 min-h-[44px] py-2 font-mono font-bold text-xs uppercase tracking-[0.08em] text-center text-muted-foreground"
-        >
-          {t('settingsNav')}
-        </button>
-      </nav>
-    </div>
+        {/* Events Tab */}
+        <TabsContent value="events">
+          {loading ? (
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 rounded-base border-2 border-border bg-card animate-pulse" />)}</div>
+          ) : myEvents.length === 0 ? (
+            <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
+              <p className="text-muted-foreground mb-4">You haven't registered for any events yet.</p>
+              <Button onClick={() => navigate("/explore")}>Browse Events</Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myEvents.map((e) => (
+                <button
+                  key={e.registrationId}
+                  onClick={() => navigate(`/event/${e.eventId}`)}
+                  className="w-full text-start rounded-base border-2 border-border bg-card p-4 hover:shadow-shadow transition-shadow flex items-center gap-4"
+                >
+                  <span className="text-xl">{TYPE_ICON[e.eventType] || TYPE_ICON.other}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-foreground truncate">{e.eventName}</h3>
+                      <Badge variant={STATUS_VARIANT[e.registrationStatus] || "outline"} className="capitalize shrink-0">
+                        {e.registrationStatus}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground capitalize">{e.eventType} &middot; {e.eventStatus}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Teams Tab */}
+        <TabsContent value="teams">
+          {myTeams.length === 0 ? (
+            <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
+              <p className="text-muted-foreground">You're not part of any teams yet.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {myTeams.map((t) => (
+                <div key={t.teamId} className="rounded-base border-2 border-border bg-card p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-foreground">{t.teamName}</h3>
+                    <Badge variant={STATUS_VARIANT[t.teamStatus] || "outline"} className="capitalize">{t.teamStatus}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t.eventName}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px]">Role: {t.memberRole}</Badge>
+                    <span className="text-xs text-muted-foreground font-mono">Code: {t.teamCode}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Submissions Tab */}
+        <TabsContent value="submissions">
+          {mySubmissions.length === 0 ? (
+            <div className="text-center py-12 rounded-base border-2 border-dashed border-border">
+              <p className="text-muted-foreground">No submissions yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {mySubmissions.map((s) => (
+                <div key={s.submissionId} className="rounded-base border-2 border-border bg-card p-4 flex items-center gap-4">
+                  <Trophy className="h-5 w-5 text-main shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-foreground truncate">{s.projectName}</h3>
+                      <Badge variant={STATUS_VARIANT[s.status] || "outline"} className="capitalize shrink-0">{s.status}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{s.eventName}</p>
+                  </div>
+                  {s.totalScore != null && (
+                    <span className="text-lg font-black text-main">{Math.round(s.totalScore)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </DashboardLayout>
   );
 };
 

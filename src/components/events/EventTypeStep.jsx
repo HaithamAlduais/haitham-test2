@@ -8,7 +8,7 @@ import { useLanguage } from "../../context/LanguageContext";
  * Used inside EventCreationFlow when public mode is active.
  */
 
-const COMING_SOON_TYPES = ["hackathon"];
+const COMING_SOON_TYPES = [];
 
 const EventTypeStep = ({ selectedType, onSelectType }) => {
   const { t } = useLanguage();

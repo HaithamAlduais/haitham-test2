@@ -5,6 +5,7 @@ import EventTypeStep from "./EventTypeStep";
 import EventSuccessScreen from "./EventSuccessScreen";
 import PlaceholderSection from "./PlaceholderSection";
 import PublishDecisionStep from "./PublishDecisionStep";
+import HackathonCreationWizard from "../hackathon/HackathonCreationWizard";
 import { apiPost } from "../../utils/apiClient";
 import { useLanguage } from "../../context/LanguageContext";
 import GeneralEventForm from "./GeneralEventForm";
@@ -136,6 +137,11 @@ const EventCreationFlow = ({ isOpen, onClose }) => {
     : "";
 
   if (!isOpen) return null;
+
+  // Hackathon type gets its own full-screen wizard
+  if (eventType === "hackathon") {
+    return <HackathonCreationWizard onClose={handleClose} />;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">

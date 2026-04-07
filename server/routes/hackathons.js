@@ -12,6 +12,7 @@ const {
 const registrationRoutes = require("./registrations");
 const teamRoutes = require("./teams");
 const submissionRoutes = require("./submissions");
+const judgingRoutes = require("./judging");
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.patch("/:id/status", requireRole("Organizer"), updateHackathonStatus);
 router.use("/:id/registrations", registrationRoutes);
 router.use("/:id/teams", teamRoutes);
 router.use("/:id/submissions", submissionRoutes);
+router.use("/:id", judgingRoutes);
 
 module.exports = router;

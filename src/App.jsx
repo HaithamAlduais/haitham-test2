@@ -20,6 +20,7 @@ import HackathonPublicPage from './pages/HackathonPublicPage'
 import RegistrationFormPage from './pages/RegistrationFormPage'
 import TeamFormationPage from './pages/TeamFormationPage'
 import SubmissionFormPage from './pages/SubmissionFormPage'
+import JudgePortalPage from './pages/JudgePortalPage'
 
 /**
  * Protects routes by authentication and optionally by role(s).
@@ -167,6 +168,16 @@ function App() {
       <Route path="/hackathon/:slug/register" element={<RegistrationFormPage />} />
       <Route path="/hackathon/:slug/teams" element={<TeamFormationPage />} />
       <Route path="/hackathon/:slug/submit" element={<SubmissionFormPage />} />
+
+      {/* Judge routes */}
+      <Route
+        path="/dashboard/judge/:hackathonId"
+        element={
+          <PrivateRoute requiredRoles={["Judge", "Organizer"]}>
+            <JudgePortalPage />
+          </PrivateRoute>
+        }
+      />
 
       {/* Shared routes (all roles) */}
       <Route

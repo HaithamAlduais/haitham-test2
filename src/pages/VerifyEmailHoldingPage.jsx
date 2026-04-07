@@ -25,7 +25,7 @@ const VerifyEmailHoldingPage = () => {
       try {
         const userDocSnap = await getDoc(doc(db, "users", user.uid));
         const role = userDocSnap.exists() ? userDocSnap.data().role : null;
-        navigate(role === "Provider" ? "/dashboard" : "/home", { replace: true });
+        navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
       } catch {
         navigate("/dashboard", { replace: true });
       }

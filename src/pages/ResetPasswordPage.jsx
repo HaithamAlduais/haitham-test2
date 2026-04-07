@@ -68,7 +68,7 @@ const ResetPasswordPage = () => {
           <div style={styles.logo}>R</div>
           <h1 style={styles.brandTitle}>Ramsha</h1>
           <p style={styles.brandTagline}>
-            Connecting Providers and Participants in one secure platform.
+            Connecting Organizers and Participants in one secure platform.
           </p>
         </div>
       </div>

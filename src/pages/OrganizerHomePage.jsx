@@ -11,7 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { Plus, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
-const ProviderHomePage = () => {
+const OrganizerHomePage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { activeSessionCount, totalEventCount, refetchActiveSessions } = useHomepageStats();
@@ -193,4 +193,4 @@ function DashboardChart({ t }) {
   );
 }
 
-export default ProviderHomePage;
+export default OrganizerHomePage;

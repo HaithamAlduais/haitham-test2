@@ -1,10 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import LandingPage from './landing/LandingPage'
-import LandingOrganizerPage from './landing/LandingOrganizerPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import ProviderHomePage from './pages/ProviderHomePage'
+import OrganizerHomePage from './pages/OrganizerHomePage'
 import ParticipantHomePage from './pages/ParticipantHomePage'
 import SessionsPage from './pages/SessionsPage'
 import EventsPage from './pages/EventsPage'
@@ -16,12 +15,12 @@ import VerifyEmailHoldingPage from './pages/VerifyEmailHoldingPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
 
-// Protects routes by authentication and optionally by role.
-// If not authenticated, redirects to /login.
-// If requiredRole is set and the user's role doesn't match,
-// redirects to the appropriate home page for their role.
-const PrivateRoute = ({ children, requiredRole }) => {
-  const { currentUser, userRole, loading } = useAuth()
+/**
+ * Protects routes by authentication and optionally by role(s).
+ * Accepts `requiredRole` (string) or `requiredRoles` (array).
+ */
+const PrivateRoute = ({ children, requiredRole, requiredRoles }) => {
+  const { currentUser, userRole, hasRole, loading } = useAuth()
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
@@ -30,14 +29,22 @@ const PrivateRoute = ({ children, requiredRole }) => {
     )
   }
   if (!currentUser) return <Navigate to="/login" replace />
-  if (requiredRole && userRole && userRole !== requiredRole) {
-    return <Navigate to={userRole === 'Provider' ? '/dashboard' : '/home'} replace />
+
+  // Check role access
+  const allowed = requiredRoles || (requiredRole ? [requiredRole] : null)
+  if (allowed && userRole) {
+    const hasAccess = allowed.some((r) => hasRole(r))
+    if (!hasAccess) {
+      if (userRole === 'Organizer') return <Navigate to="/dashboard" replace />
+      if (userRole === 'Judge') return <Navigate to="/dashboard/judge" replace />
+      return <Navigate to="/home" replace />
+    }
   }
+
   return children
 }
 
-// Role-aware default redirect for authenticated users.
-// Authenticated Providers go to /dashboard, Participants to /home.
+/** Role-aware default redirect for authenticated users. */
 const DefaultRedirect = () => {
   const { currentUser, userRole, loading } = useAuth()
   if (loading) {
@@ -49,16 +56,16 @@ const DefaultRedirect = () => {
   }
   if (!currentUser) return <Navigate to="/" replace />
   if (userRole === 'Participant') return <Navigate to="/home" replace />
+  if (userRole === 'Judge') return <Navigate to="/dashboard/judge" replace />
   return <Navigate to="/dashboard" replace />
 }
 
 function App() {
   return (
     <Routes>
-      {/* Landing page as default route */}
+      {/* Landing page — unified organizer + participant marketplace */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/organizer" element={<LandingOrganizerPage />} />
-      
+
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Login />} />
@@ -76,12 +83,12 @@ function App() {
         }
       />
 
-      {/* Provider routes */}
+      {/* Organizer routes */}
       <Route
         path="/dashboard"
         element={
-          <PrivateRoute requiredRole="Provider">
-            <ProviderHomePage />
+          <PrivateRoute requiredRole="Organizer">
+            <OrganizerHomePage />
           </PrivateRoute>
         }
       />
@@ -89,7 +96,7 @@ function App() {
       <Route
         path="/sessions"
         element={
-          <PrivateRoute requiredRole="Provider">
+          <PrivateRoute requiredRole="Organizer">
             <SessionsPage />
           </PrivateRoute>
         }
@@ -98,7 +105,7 @@ function App() {
       <Route
         path="/sessions/:id"
         element={
-          <PrivateRoute requiredRole="Provider">
+          <PrivateRoute requiredRole="Organizer">
             <LiveMonitoringPage />
           </PrivateRoute>
         }
@@ -107,7 +114,7 @@ function App() {
       <Route
         path="/events"
         element={
-          <PrivateRoute requiredRole="Provider">
+          <PrivateRoute requiredRole="Organizer">
             <EventsPage />
           </PrivateRoute>
         }
@@ -116,7 +123,7 @@ function App() {
       <Route
         path="/events/create"
         element={
-          <PrivateRoute requiredRole="Provider">
+          <PrivateRoute requiredRole="Organizer">
             <CreateEventPage />
           </PrivateRoute>
         }
@@ -125,13 +132,13 @@ function App() {
       <Route
         path="/events/:eventId"
         element={
-          <PrivateRoute requiredRole="Provider">
+          <PrivateRoute requiredRole="Organizer">
             <EventDetailPage />
           </PrivateRoute>
         }
       />
 
-      {/* Shared routes (both roles) */}
+      {/* Shared routes (all roles) */}
       <Route
         path="/settings"
         element={
@@ -140,6 +147,9 @@ function App() {
           </PrivateRoute>
         }
       />
+
+      {/* Legacy redirects */}
+      <Route path="/organizer" element={<Navigate to="/" replace />} />
 
       {/* Default redirect */}
       <Route path="*" element={<DefaultRedirect />} />

@@ -1,10 +1,13 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
 const skipEmailVerification =
   import.meta.env.VITE_SKIP_EMAIL_VERIFICATION === "true";
+
+/** Map legacy role names to the new canonical role. */
+const LEGACY_ROLE_MAP = { Provider: "Organizer" };
 
 // 1. Create the context
 const AuthContext = createContext();
@@ -14,58 +17,68 @@ export const useAuth = () => useContext(AuthContext);
 
 // 3. Provider component
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null); // Firebase Auth user
-  const [userRole, setUserRole] = useState(null);       // Role from Firestore
-  const [loading, setLoading] = useState(true);         // Prevents flash of wrong UI
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);    // primary role (first in array)
+  const [roles, setRoles] = useState([]);             // full roles array
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen to Firebase Auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      // SECURITY GATE: Only treat the user as authenticated if their
-      // email address has been verified. Unverified users are treated
-      // the same as logged-out users throughout the entire app.
       if (user && (user.emailVerified || skipEmailVerification)) {
-        // User is signed in AND verified — fetch their role from Firestore
         try {
           const userDocSnap = await getDoc(doc(db, "users", user.uid));
 
           if (userDocSnap.exists()) {
-            setUserRole(userDocSnap.data().role);
+            const data = userDocSnap.data();
+            // Prefer `roles` array; fall back to legacy `role` string
+            let userRoles;
+            if (Array.isArray(data.roles) && data.roles.length > 0) {
+              userRoles = data.roles;
+            } else if (data.role) {
+              const mapped = LEGACY_ROLE_MAP[data.role] || data.role;
+              userRoles = [mapped];
+            } else {
+              userRoles = [];
+            }
+            setRoles(userRoles);
+            setUserRole(userRoles[0] || null);
           } else {
             setUserRole(null);
+            setRoles([]);
           }
         } catch (error) {
           console.error("Error fetching user role: ", error);
           setUserRole(null);
+          setRoles([]);
         }
 
         setCurrentUser(user);
       } else {
-        // User is signed out OR email is not yet verified — clear everything.
-        // This means unverified users can never access protected routes.
         setCurrentUser(null);
         setUserRole(null);
+        setRoles([]);
       }
 
       setLoading(false);
     });
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
   }, []);
 
   const logout = () => signOut(auth);
 
-  // 4. Broadcast user session + role to the entire app
+  /** Check if the user has a specific role. */
+  const hasRole = useCallback((roleName) => roles.includes(roleName), [roles]);
+
   const value = {
     currentUser,
     userRole,
+    roles,
+    hasRole,
     loading,
     logout,
   };
 
-  // Always render children so public routes (e.g. landing `/`) are not a blank screen
-  // while Firebase resolves. Protected routes must check `loading` in PrivateRoute.
   return (
     <AuthContext.Provider value={value}>
       {children}

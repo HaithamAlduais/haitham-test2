@@ -5,18 +5,18 @@ const { listEvents, getEvent, listEventSessions, createEvent, updateEvent } = re
 const router = express.Router();
 
 // POST /api/events — Create a new event
-router.post("/", requireRole("Provider"), createEvent);
+router.post("/", requireRole("Organizer"), createEvent);
 
-// GET /api/events — List all events owned by the Provider
-router.get("/", requireRole("Provider"), listEvents);
+// GET /api/events — List all events owned by the Organizer
+router.get("/", requireRole("Organizer"), listEvents);
 
-// GET /api/events/:eventId — Get a single event (Provider only)
-router.get("/:eventId", requireRole("Provider"), getEvent);
+// GET /api/events/:eventId — Get a single event (Organizer only)
+router.get("/:eventId", requireRole("Organizer"), getEvent);
 
-// PATCH /api/events/:eventId — Update a single event (Provider only)
-router.patch("/:eventId", requireRole("Provider"), updateEvent);
+// PATCH /api/events/:eventId — Update a single event (Organizer only)
+router.patch("/:eventId", requireRole("Organizer"), updateEvent);
 
-// GET /api/events/:eventId/sessions — List sessions linked to an event (Provider only)
-router.get("/:eventId/sessions", requireRole("Provider"), listEventSessions);
+// GET /api/events/:eventId/sessions — List sessions linked to an event (Organizer only)
+router.get("/:eventId/sessions", requireRole("Organizer"), listEventSessions);
 
 module.exports = router;

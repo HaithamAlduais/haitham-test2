@@ -1,17 +1,22 @@
 const { db, auth } = require("../lib/firebase");
+const { LEGACY_ROLE_MAP } = require("../lib/constants");
 
 /**
  * Express middleware that verifies a Firebase ID token from the
  * Authorization header and optionally enforces one or more allowed roles.
  *
+ * Supports both the new `roles` array and the legacy `role` string field.
+ * Legacy "Provider" is automatically mapped to "Organizer".
+ *
  * Usage:
- *   router.post("/sessions", requireRole("Provider"), handler);
- *   router.get("/sessions/:id", requireRole("Provider", "Participant"), handler);
+ *   router.post("/sessions", requireRole("Organizer"), handler);
+ *   router.get("/sessions/:id", requireRole("Organizer", "Participant"), handler);
  *
  * On success the middleware attaches to `req`:
  *   - req.uid          — Firebase UID
  *   - req.email        — user email
- *   - req.role         — Firestore role string ("Provider" | "Participant")
+ *   - req.role         — primary role string (first element of roles array)
+ *   - req.roles        — full roles array
  *   - req.userRecord   — full Firestore /users/{uid} document data
  */
 function requireRole(...allowedRoles) {
@@ -36,7 +41,7 @@ function requireRole(...allowedRoles) {
       req.uid = decoded.uid;
       req.email = decoded.email;
 
-      // 2. Fetch the user's Firestore profile to get their role
+      // 2. Fetch the user's Firestore profile to get their role(s)
       let userDoc;
       try {
         userDoc = await db()
@@ -53,14 +58,30 @@ function requireRole(...allowedRoles) {
       }
 
       const userData = userDoc.data();
-      req.role = userData.role;
       req.userRecord = userData;
 
-      // 3. Check role if any allowed roles were specified
-      if (allowedRoles.length > 0 && !allowedRoles.includes(userData.role)) {
-        return res.status(403).json({
-          error: `Access denied. Required role: ${allowedRoles.join(" or ")}.`,
-        });
+      // 3. Resolve roles — prefer `roles` array, fall back to legacy `role` string
+      let userRoles;
+      if (Array.isArray(userData.roles) && userData.roles.length > 0) {
+        userRoles = userData.roles;
+      } else if (userData.role) {
+        const mapped = LEGACY_ROLE_MAP[userData.role] || userData.role;
+        userRoles = [mapped];
+      } else {
+        userRoles = [];
+      }
+
+      req.roles = userRoles;
+      req.role = userRoles[0] || null;
+
+      // 4. Check role if any allowed roles were specified
+      if (allowedRoles.length > 0) {
+        const hasAccess = userRoles.some((r) => allowedRoles.includes(r));
+        if (!hasAccess) {
+          return res.status(403).json({
+            error: `Access denied. Required role: ${allowedRoles.join(" or ")}.`,
+          });
+        }
       }
 
       next();

@@ -4,16 +4,31 @@
  * Single source of truth for enums used across controllers and jobs.
  */
 
+// ── Roles ───────────────────────────────────────────────────────────────────
+const ROLES = {
+  ADMIN: "Admin",
+  ORGANIZER: "Organizer",
+  PARTICIPANT: "Participant",
+  JUDGE: "Judge",
+  SPONSOR: "Sponsor",
+};
+
+/** Map legacy role names to the new canonical role. */
+const LEGACY_ROLE_MAP = { Provider: ROLES.ORGANIZER };
+
+// ── Sessions ────────────────────────────────────────────────────────────────
 const SESSION_STATUS = { DRAFT: "draft", ACTIVE: "active", CLOSED: "closed" };
 const SESSION_TYPE = { QR_CODE: "qr_code", F2F: "f2f" };
 const ATTENDANCE_STATUS = { PRESENT: "present", LATE: "late", ABSENT: "absent" };
 
+// ── Events ──────────────────────────────────────────────────────────────────
 const EVENT_TYPES = {
   OTHER: "other",
   WORKSHOP: "workshop",
   SEMINAR: "seminar",
   TRAINING: "training",
   CONFERENCE: "conference",
+  HACKATHON: "hackathon",
 };
 
 const ALLOWED_EVENT_TYPES = Object.values(EVENT_TYPES);
@@ -24,13 +39,51 @@ const EVENT_CODE_PREFIX = {
   [EVENT_TYPES.SEMINAR]: "SEM",
   [EVENT_TYPES.TRAINING]: "TRN",
   [EVENT_TYPES.CONFERENCE]: "CNF",
+  [EVENT_TYPES.HACKATHON]: "HKT",
+};
+
+// ── Hackathons ──────────────────────────────────────────────────────────────
+const HACKATHON_STATUS = {
+  DRAFT: "draft",
+  PUBLISHED: "published",
+  ACTIVE: "active",
+  JUDGING: "judging",
+  COMPLETED: "completed",
+};
+
+const REGISTRATION_STATUS = {
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
+  WAITLISTED: "waitlisted",
+};
+
+const TEAM_STATUS = {
+  FORMING: "forming",
+  COMPLETE: "complete",
+  SUBMITTED: "submitted",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
+};
+
+const SUBMISSION_STATUS = {
+  DRAFT: "draft",
+  SUBMITTED: "submitted",
+  UNDER_REVIEW: "under_review",
+  EVALUATED: "evaluated",
 };
 
 module.exports = {
+  ROLES,
+  LEGACY_ROLE_MAP,
   SESSION_STATUS,
   SESSION_TYPE,
   ATTENDANCE_STATUS,
   EVENT_TYPES,
   ALLOWED_EVENT_TYPES,
   EVENT_CODE_PREFIX,
+  HACKATHON_STATUS,
+  REGISTRATION_STATUS,
+  TEAM_STATUS,
+  SUBMISSION_STATUS,
 };

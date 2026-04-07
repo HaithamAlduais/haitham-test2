@@ -74,7 +74,7 @@ const Login = () => {
       }
       const userDocSnap = await getDoc(doc(db, "users", user.uid));
       const role = userDocSnap.exists() ? userDocSnap.data().role : null;
-      navigate(role === "Provider" ? "/dashboard" : "/home", { replace: true });
+      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code));
     } finally {
@@ -99,6 +99,7 @@ const Login = () => {
         uid: user.uid,
         email: user.email,
         role: signupData.role,
+        roles: [signupData.role],
         createdAt: serverTimestamp(),
       });
       await sendEmailVerification(user, actionCodeSettings);
@@ -124,14 +125,14 @@ const Login = () => {
     }
   };
 
-  const handleDemoProviderLogin = async () => {
+  const handleDemoOrganizerLogin = async () => {
     setError("");
     setLoading(true);
     try {
       const demoEmail = import.meta.env.VITE_DEMO_PROVIDER_EMAIL;
       const demoPassword = import.meta.env.VITE_DEMO_PROVIDER_PASSWORD;
       if (!demoEmail || !demoPassword) {
-        setError("Demo provider not available. Set VITE_DEMO_PROVIDER_EMAIL and VITE_DEMO_PROVIDER_PASSWORD in your .env file.");
+        setError("Demo organizer not available. Set VITE_DEMO_PROVIDER_EMAIL and VITE_DEMO_PROVIDER_PASSWORD in your .env file.");
         setLoading(false);
         return;
       }
@@ -142,7 +143,8 @@ const Login = () => {
         await setDoc(demoDocRef, {
           uid: cred.user.uid,
           email: cred.user.email,
-          role: "Provider",
+          role: "Organizer",
+          roles: ["Organizer"],
           createdAt: serverTimestamp(),
         });
       }
@@ -173,11 +175,12 @@ const Login = () => {
           uid: user.uid,
           email: user.email,
           role: "Participant",
+          roles: ["Participant"],
           createdAt: serverTimestamp(),
         });
       }
       const role = userDocSnap.exists() ? userDocSnap.data().role : "Participant";
-      navigate(role === "Provider" ? "/dashboard" : "/home", { replace: true });
+      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code));
     } finally {
@@ -278,8 +281,8 @@ const Login = () => {
                     <Button onClick={handleGoogleSignIn} disabled={loading} variant="neutral" className="flex-1">
                       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="h-5 w-5" />
                     </Button>
-                    <Button type="button" onClick={handleDemoProviderLogin} disabled={loading} variant="neutral" className="flex-1 text-xs">
-                      {t("auth.demoProvider")}
+                    <Button type="button" onClick={handleDemoOrganizerLogin} disabled={loading} variant="neutral" className="flex-1 text-xs">
+                      {t("auth.demoOrganizer")}
                     </Button>
                   </div>
 
@@ -338,7 +341,7 @@ const Login = () => {
                     className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main focus-visible:ring-offset-2"
                   >
                     <option value="Participant">Participant</option>
-                    <option value="Provider">Provider</option>
+                    <option value="Organizer">Organizer</option>
                   </select>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full mt-1">

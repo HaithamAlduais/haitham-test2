@@ -102,9 +102,9 @@ async function getSession(req, res) {
 
     const session = docSnap.data();
 
-    // Providers can see their own sessions (any status).
+    // Organizers can see their own sessions (any status).
     // Participants can only see active sessions.
-    if (req.role === "Provider" && session.ownerUid !== req.uid) {
+    if (req.role === "Organizer" && session.ownerUid !== req.uid) {
       return res.status(403).json({ error: "You do not own this session." });
     }
     if (req.role === "Participant" && session.status !== SESSION_STATUS.ACTIVE) {

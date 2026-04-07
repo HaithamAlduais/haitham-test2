@@ -6,6 +6,10 @@ import EventSuccessScreen from "./EventSuccessScreen";
 import PlaceholderSection from "./PlaceholderSection";
 import PublishDecisionStep from "./PublishDecisionStep";
 import HackathonCreationWizard from "../hackathon/HackathonCreationWizard";
+import WorkshopWizard from "./wizards/WorkshopWizard";
+import SeminarWizard from "./wizards/SeminarWizard";
+import TrainingWizard from "./wizards/TrainingWizard";
+import ConferenceWizard from "./wizards/ConferenceWizard";
 import { apiPost } from "../../utils/apiClient";
 import { useLanguage } from "../../context/LanguageContext";
 import GeneralEventForm from "./GeneralEventForm";
@@ -138,10 +142,12 @@ const EventCreationFlow = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Hackathon type gets its own full-screen wizard
-  if (eventType === "hackathon") {
-    return <HackathonCreationWizard onClose={handleClose} />;
-  }
+  // Type-specific full-screen wizards
+  if (eventType === "hackathon") return <HackathonCreationWizard onClose={handleClose} />;
+  if (eventType === "workshop") return <WorkshopWizard onClose={handleClose} />;
+  if (eventType === "seminar") return <SeminarWizard onClose={handleClose} />;
+  if (eventType === "training") return <TrainingWizard onClose={handleClose} />;
+  if (eventType === "conference") return <ConferenceWizard onClose={handleClose} />;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">

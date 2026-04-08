@@ -537,7 +537,7 @@ Important:
   const handleSaveDraft = async () => {
     const result = await saveHackathon(false);
     if (result) {
-      navigate(`/hackathons/${result.slug || result.id}`);
+      navigate(`/hackathons/${result.id}`);
     }
   };
 

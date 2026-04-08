@@ -19,7 +19,7 @@ export default function PageBuilderPage() {
   const [hackathon, setHackathon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState(""); // JSX code
-  const [layout, setLayout] = useState("split");
+  const [layout, setLayout] = useState("preview"); // preview first, switch to split/editor
 
   // Build preview HTML that renders JSX with React + Babel
   const buildPreviewHtml = (jsxCode) => {

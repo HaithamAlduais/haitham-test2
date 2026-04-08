@@ -88,14 +88,43 @@ const notificationRoutes = require('./routes/notifications');
 app.use('/api/notifications', notificationRoutes);
 
 // ── AI File Extract → Auto-fill Wizard ─────────────────────────────────────
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB max
+const Busboy = require('busboy');
 
-app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organizer', 'Admin'), upload.single('file'), async (req, res) => {
+function parseMultipart(req) {
+  return new Promise((resolve, reject) => {
+    const busboy = Busboy({ headers: req.headers, limits: { fileSize: 20 * 1024 * 1024 } });
+    const files = [];
+
+    busboy.on('file', (fieldname, file, info) => {
+      const { filename, mimeType } = info;
+      const chunks = [];
+      file.on('data', (chunk) => chunks.push(chunk));
+      file.on('end', () => {
+        files.push({ fieldname, filename, mimeType, buffer: Buffer.concat(chunks) });
+      });
+    });
+
+    busboy.on('finish', () => resolve(files));
+    busboy.on('error', reject);
+
+    // In Cloud Functions, the body is already buffered as rawBody
+    if (req.rawBody) {
+      busboy.end(req.rawBody);
+    } else {
+      req.pipe(busboy);
+    }
+  });
+}
+
+app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organizer', 'Admin'), async (req, res) => {
   try {
-    console.log("[extract-from-file] Starting...", req.file?.originalname, req.file?.mimetype, req.file?.size);
+    // Parse multipart form (works in both local and Cloud Functions)
+    const files = await parseMultipart(req);
+    const uploaded = files[0];
 
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    console.log("[extract-from-file] Starting...", uploaded?.filename, uploaded?.mimeType, uploaded?.buffer?.length);
+
+    if (!uploaded || !uploaded.buffer) return res.status(400).json({ error: "No file uploaded" });
 
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const apiKey = process.env.GEMINI_API_KEY;
@@ -105,9 +134,9 @@ app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organ
     let fileUrl = null;
     try {
       const bucket = admin.storage().bucket();
-      const fileName = `hackathon-files/${req.uid}/${Date.now()}_${req.file.originalname}`;
+      const fileName = `hackathon-files/${req.uid}/${Date.now()}_${uploaded.filename}`;
       const gcsFile = bucket.file(fileName);
-      await gcsFile.save(req.file.buffer, { contentType: req.file.mimetype });
+      await gcsFile.save(uploaded.buffer, { contentType: uploaded.mimeType });
       const [url] = await gcsFile.getSignedUrl({ action: 'read', expires: '2030-01-01' });
       fileUrl = url;
       console.log("[extract-from-file] File uploaded to storage:", fileName);
@@ -115,13 +144,12 @@ app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organ
       console.warn("[extract-from-file] Storage upload failed:", uploadErr.message);
     }
 
-    // Send file directly to Gemini as inline data (no local parsing needed!)
-    // Gemini 2.0 Flash can read PDFs, DOCX, images, etc. natively
+    // Send file directly to Gemini as inline data
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const fileBase64 = req.file.buffer.toString('base64');
-    const mimeType = req.file.mimetype || 'application/octet-stream';
+    const fileBase64 = uploaded.buffer.toString('base64');
+    const mimeType = uploaded.mimeType || 'application/octet-stream';
 
     const prompt = `You are an AI assistant. Read this uploaded file and extract hackathon information. Return it as a JSON object.
 
@@ -304,7 +332,14 @@ Return ONLY raw HTML starting with <!DOCTYPE html>.`;
 
 // ── Test routes (admin only) ───────────────────────────────────────────────
 app.get('/api/test', (req, res) => {
-  res.json({ message: "Hello from your Express backend!" });
+  res.json({
+    message: "Hello from your Express backend!",
+    env: {
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY ? "SET (" + process.env.GEMINI_API_KEY.substring(0,10) + "...)" : "NOT SET",
+      RESEND_API_KEY: process.env.RESEND_API_KEY ? "SET" : "NOT SET",
+      DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN ? "SET" : "NOT SET",
+    }
+  });
 });
 
 // Test email sending

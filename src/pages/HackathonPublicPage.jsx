@@ -75,6 +75,21 @@ export default function HackathonPublicPage() {
   const criteria = hackathon.judgingCriteria || [];
   const isRegistrationOpen = ["published", "active"].includes(hackathon.status);
 
+  // If organizer created a custom landing page, show it full-screen
+  if (hackathon.hasCustomPage && hackathon.customPageHtml) {
+    return (
+      <div className="min-h-screen">
+        <iframe
+          srcDoc={hackathon.customPageHtml}
+          className="w-full min-h-screen border-0"
+          title={hackathon.title}
+          sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation"
+          style={{ height: "100vh" }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground" dir={dir}>
       {/* Header */}

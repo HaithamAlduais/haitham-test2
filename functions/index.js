@@ -10,7 +10,7 @@ const resendKey = defineSecret("RESEND_API_KEY");
 const discordToken = defineSecret("DISCORD_BOT_TOKEN");
 
 // Export the Express app as a Firebase Cloud Function named "api"
-exports.api = onRequest({ secrets: [geminiKey, resendKey, discordToken], memory: "512MiB", timeoutSeconds: 120 }, app);
+exports.api = onRequest({ secrets: [geminiKey, resendKey, discordToken], memory: "1GiB", timeoutSeconds: 300 }, app);
 
 // ── Scheduled: auto-close expired sessions (every minute) ───────────────────
 exports.autoCloseExpiredSessions = onSchedule("* * * * *", autoCloseSessions);

@@ -69,6 +69,7 @@ async function createHackathon(req, res) {
       workbackSchedule: Array.isArray(workbackSchedule) ? workbackSchedule : [],
       sponsors: Array.isArray(req.body.sponsors) ? req.body.sponsors : [],
       faq: Array.isArray(req.body.faq) ? req.body.faq : [],
+      registrationForm: req.body.registrationForm || { fields: [] },
       format: req.body.format || "online",
       hackathonStart: req.body.hackathonStart || "",
       hackathonEnd: req.body.hackathonEnd || "",
@@ -296,14 +297,20 @@ async function listPublicHackathons(req, res) {
 async function getPublicHackathon(req, res) {
   try {
     const { slug } = req.params;
+    const decodedSlug = decodeURIComponent(slug);
 
-    const snapshot = await hackathonsCol()
-      .where("slug", "==", slug)
-      .where("isPublic", "==", true)
+    // Try by slug first (public hackathons)
+    let snapshot = await hackathonsCol()
+      .where("slug", "==", decodedSlug)
       .limit(1)
       .get();
 
+    // Fallback: try by document ID
     if (snapshot.empty) {
+      const docSnap = await hackathonsCol().doc(decodedSlug).get();
+      if (docSnap.exists) {
+        return res.json({ id: docSnap.id, ...docSnap.data() });
+      }
       return res.status(404).json({ error: "Hackathon not found." });
     }
 

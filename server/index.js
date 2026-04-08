@@ -151,29 +151,47 @@ app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organ
     const fileBase64 = uploaded.buffer.toString('base64');
     const mimeType = uploaded.mimeType || 'application/octet-stream';
 
-    const prompt = `You are an AI assistant. Read this uploaded file and extract hackathon information. Return it as a JSON object.
+    // Use the language hint from the request body if provided
+    const lang = req.body?.language || 'ar';
 
-Return ONLY a valid JSON object with these fields (use empty string "" if not found, empty array [] for arrays):
+    const prompt = lang === 'ar'
+      ? `حلل هذا الملف واستخرج معلومات الهاكاثون. أعد JSON فقط.
+مهم جداً:
+- التواريخ بتنسيق "2026-05-01T09:00" (بدون Z)
+- الرعاة: استخرج كل الشركات والجهات الراعية مع: الاسم، المستوى (platinum/gold/silver/bronze/partner)، الموقع (websiteUrl)، رابط الشعار (logoUrl)، ووصف. إذا لم يُذكر المستوى استخدم "gold"
+- المسارات: استخرج كل فئات/مسارات الهاكاثون
+- الجوائز: استخرج كل الجوائز مع قيمتها
+- الأسئلة الشائعة: استخرج أي أسئلة وأجوبة. وإذا لم توجد أنشئ 6-8 أسئلة شائعة مناسبة
+- إذا كانت بعض البيانات غير موجودة اتركها فارغة لكن حاول دائماً إنشاء أسئلة شائعة
+
+أعد JSON فقط بهذا الشكل:
 {
-  "title": "hackathon title",
-  "description": "full description",
-  "targetAudience": "who should participate",
-  "format": "online" or "in-person",
-  "contactEmail": "contact email",
-  "rules": "rules and code of conduct",
-  "location": { "name": "venue name", "address": "address" },
-  "schedule": {
-    "registrationOpen": "ISO datetime or empty",
-    "registrationClose": "ISO datetime or empty",
-    "hackathonStart": "ISO datetime or empty",
-    "hackathonEnd": "ISO datetime or empty",
-    "judgingStart": "ISO datetime or empty",
-    "judgingEnd": "ISO datetime or empty"
-  },
-  "tracks": [{ "name": "track name", "description": "description" }],
-  "prizes": [{ "place": "1st", "title": "Grand Prize", "value": "$5000", "category": "overall", "type": "cash" }],
-  "sponsors": [{ "name": "Sponsor", "tier": "gold" }],
-  "faq": [{ "question": "Q?", "answer": "A" }]
+  "title": "", "description": "", "targetAudience": "", "format": "online", "contactEmail": "", "rules": "",
+  "location": { "name": "", "address": "" },
+  "schedule": { "registrationOpen": "", "registrationClose": "", "hackathonStart": "", "hackathonEnd": "", "sessionsStart": "", "sessionsEnd": "", "judgingStart": "", "judgingEnd": "" },
+  "tracks": [{ "name": "", "description": "" }],
+  "prizes": [{ "place": "", "title": "", "value": "", "category": "overall", "type": "cash" }],
+  "sponsors": [{ "name": "", "tier": "gold", "websiteUrl": "", "logoUrl": "", "description": "" }],
+  "faq": [{ "question": "", "answer": "" }]
+}`
+      : `Analyze this file and extract hackathon information. Return ONLY a valid JSON object.
+Important:
+- Dates in format "2026-05-01T09:00" (no Z)
+- Sponsors: extract ALL companies, organizations, partners. For each: name, tier (platinum/gold/silver/bronze/partner, default "gold"), websiteUrl, logoUrl, description
+- Tracks: extract all hackathon tracks/categories
+- Prizes: extract all prizes with values
+- FAQ: extract any Q&A. If none found, GENERATE 6-8 relevant FAQ entries based on the hackathon content
+- Leave empty if not found, but ALWAYS generate FAQ
+
+Return JSON with this structure:
+{
+  "title": "", "description": "", "targetAudience": "", "format": "online", "contactEmail": "", "rules": "",
+  "location": { "name": "", "address": "" },
+  "schedule": { "registrationOpen": "", "registrationClose": "", "hackathonStart": "", "hackathonEnd": "", "sessionsStart": "", "sessionsEnd": "", "judgingStart": "", "judgingEnd": "" },
+  "tracks": [{ "name": "", "description": "" }],
+  "prizes": [{ "place": "", "title": "", "value": "", "category": "overall", "type": "cash" }],
+  "sponsors": [{ "name": "", "tier": "gold", "websiteUrl": "", "logoUrl": "", "description": "" }],
+  "faq": [{ "question": "", "answer": "" }]
 }`;
 
     console.log("[extract-from-file] Sending to Gemini...", mimeType, fileBase64.length, "bytes base64");
@@ -258,6 +276,9 @@ app.post('/api/ai/generate-landing-page', require('./middleware/requireRole')('O
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const { wizardData } = req.body;
+    const { slugify } = require('./utils/slugify');
+    const slug = slugify(wizardData?.title || "hackathon");
+    const registerUrl = `https://ramsha.net/hackathon/${slug}/register`;
 
     const prompt = `Create a complete, beautiful, single-page HTML landing page for this hackathon. Include embedded CSS and minimal JavaScript. Make it visually stunning, responsive, and professional.
 
@@ -278,13 +299,19 @@ FAQ: ${(wizardData?.faq || []).map(f => `Q: ${f.question} A: ${f.answer}`).join(
 Primary Color: ${wizardData?.branding?.primaryColor || "#7C3AED"}
 Secondary Color: ${wizardData?.branding?.secondaryColor || "#00D4AA"}
 
-REQUIREMENTS:
+REGISTRATION LINK: ${registerUrl}
+
+CRITICAL REQUIREMENTS:
 - Complete self-contained HTML with embedded CSS
 - Sections: Hero with title+tagline+CTA, About, Tracks, Prizes, Schedule, Judging Criteria, Sponsors, FAQ, Register CTA, Footer with contact
+- ALL "Register", "Sign Up", "Join", "سجّل الآن", "انضم" buttons and links MUST point to: ${registerUrl}
+- The Hero section MUST have a prominent CTA button linking to ${registerUrl}
+- Add a sticky/fixed "Register Now" button at the bottom or top of the page linking to ${registerUrl}
+- There should be at least 3 places in the page where the user can click to register (Hero CTA, mid-page CTA section, footer CTA)
 - Use the branding colors
 - Responsive design
 - Smooth scroll navigation
-- Arabic-friendly (use dir="rtl" if content is Arabic)
+- Arabic-friendly (use dir="rtl" if content is Arabic, check if title/description are Arabic)
 - Google Fonts via CDN
 - Return ONLY raw HTML starting with <!DOCTYPE html>`;
 

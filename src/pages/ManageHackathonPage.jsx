@@ -52,12 +52,15 @@ export default function ManageHackathonPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [h, regs, t] = await Promise.all([
-        apiGet(`/api/events/${id}`),
-        apiGet(`/api/events/${id}/registrations`).catch(() => ({ data: [] })),
-        apiGet(`/api/events/${id}/teams/admin/all`).catch(() => ({ data: [] })),
-      ]);
+      // First resolve the hackathon (id param could be slug or Firestore ID)
+      const h = await apiGet(`/api/events/${id}`);
+      const realId = h.id; // always use the Firestore ID for sub-resources
       setHackathon(h);
+
+      const [regs, t] = await Promise.all([
+        apiGet(`/api/events/${realId}/registrations`).catch(() => ({ data: [] })),
+        apiGet(`/api/events/${realId}/teams/admin/all`).catch(() => ({ data: [] })),
+      ]);
       setRegistrations(regs.data || []);
       setTeams(t.data || []);
     } catch {
@@ -72,7 +75,7 @@ export default function ManageHackathonPage() {
   const updateRegStatus = async (regId, status) => {
     setActionLoading(regId);
     try {
-      await apiPatch(`/api/events/${id}/registrations/${regId}`, { status });
+      await apiPatch(`/api/events/${hackathon?.id || id}/registrations/${regId}`, { status });
       setRegistrations((prev) =>
         prev.map((r) => (r.id === regId ? { ...r, status } : r))
       );
@@ -84,7 +87,7 @@ export default function ManageHackathonPage() {
     if (selectedRegs.length === 0) return;
     setActionLoading("bulk");
     try {
-      await apiPost(`/api/events/${id}/registrations/bulk-status`, {
+      await apiPost(`/api/events/${hackathon?.id || id}/registrations/bulk-status`, {
         registrationIds: selectedRegs,
         status,
       });
@@ -99,7 +102,7 @@ export default function ManageHackathonPage() {
   const updateHackathonStatus = async (newStatus) => {
     setActionLoading("status");
     try {
-      await apiPatch(`/api/events/${id}/status`, { status: newStatus });
+      await apiPatch(`/api/events/${hackathon?.id || id}/status`, { status: newStatus });
       setHackathon((prev) => ({ ...prev, status: newStatus }));
     } catch { /* silently fail */ }
     setActionLoading(null);
@@ -169,14 +172,29 @@ export default function ManageHackathonPage() {
             {hackathon.tagline && (
               <p className="text-sm text-muted-foreground mt-1">{hackathon.tagline}</p>
             )}
+            {/* Public hackathon link */}
+            {hackathon.slug && (
+              <div className="flex items-center gap-2 mt-2">
+                <a
+                  href={`/hackathon/${hackathon.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-main font-bold hover:underline truncate max-w-md"
+                >
+                  ramsha.net/hackathon/{hackathon.slug}
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://ramsha.net/hackathon/${hackathon.slug}`);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-main border border-border rounded px-2 py-0.5"
+                >
+                  {t("copy") || "نسخ"}
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
-            <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/page-builder`)}>
-              <Layout className="h-4 w-4" /> {t("pageBuilder")}
-            </Button>
-            <Button variant="neutral" size="sm" onClick={() => navigate(`/hackathons/${id}/analytics`)}>
-              <BarChart3 className="h-4 w-4" /> {t("analytics")}
-            </Button>
             {nextStatus && (
               <Button
                 onClick={() => updateHackathonStatus(nextStatus)}
@@ -217,7 +235,7 @@ export default function ManageHackathonPage() {
               onClick={async () => {
                 setAiScreening(true);
                 try {
-                  await apiPost(`/api/events/${id}/ai/screen-all-registrations`);
+                  await apiPost(`/api/events/${hackathon?.id || id}/ai/screen-all-registrations`);
                   await fetchAll();
                 } catch { /* silently fail */ }
                 setAiScreening(false);

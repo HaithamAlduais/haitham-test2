@@ -110,7 +110,7 @@ export default function HackathonsPage() {
                 <div className="flex items-start gap-4">
                   <div className="flex-1 min-w-0">
                     {!isEditing ? (
-                      <button onClick={() => isHack ? navigate(`/hackathons/${ev.id}`) : null} className="w-full text-start group">
+                      <button onClick={() => isHack ? navigate(`/hackathons/${ev.slug || ev.id}`) : null} className="w-full text-start group">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="text-lg">{TYPE_ICON[ev.eventType] || TYPE_ICON.other}</span>
                           <h3 className="font-bold text-foreground group-hover:text-main truncate">{ev.name || ev.title || "Untitled"}</h3>
@@ -136,7 +136,7 @@ export default function HackathonsPage() {
                     )}
                   </div>
                   {isHack && !isEditing && (
-                    <button onClick={() => navigate(`/hackathons/${ev.id}`)} className="shrink-0 p-2 text-muted-foreground hover:text-main"><ChevronRight className="h-5 w-5" /></button>
+                    <button onClick={() => navigate(`/hackathons/${ev.slug || ev.id}`)} className="shrink-0 p-2 text-muted-foreground hover:text-main"><ChevronRight className="h-5 w-5" /></button>
                   )}
                 </div>
 

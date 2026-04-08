@@ -256,10 +256,18 @@ async function getPublicEvent(req, res) {
 async function getEvent(req, res) {
   try {
     const { eventId } = req.params;
-    const eventSnap = await eventsCol().doc(eventId).get();
 
+    // Try direct ID first
+    let eventSnap = await eventsCol().doc(eventId).get();
+
+    // If not found, try resolving by slug
     if (!eventSnap.exists) {
-      return res.status(404).json({ error: "Event not found." });
+      const slugQuery = await eventsCol().where("slug", "==", eventId).where("ownerUid", "==", req.uid).limit(1).get();
+      if (!slugQuery.empty) {
+        eventSnap = slugQuery.docs[0];
+      } else {
+        return res.status(404).json({ error: "Event not found." });
+      }
     }
 
     const event = eventSnap.data();

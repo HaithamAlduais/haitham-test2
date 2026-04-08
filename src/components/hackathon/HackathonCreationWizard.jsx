@@ -444,7 +444,13 @@ export default function HackathonCreationWizard({ onClose }) {
 
       const payload = {
         contents: [{ parts: [
-          { text: "حلل هذا الملف واستخرج معلومات الهاكاثون لتعبئة النموذج. إذا كانت بعض البيانات غير موجودة، اتركها فارغة." },
+          { text: `حلل هذا الملف واستخرج معلومات الهاكاثون لتعبئة النموذج.
+مهم جداً:
+- التواريخ يجب أن تكون بتنسيق datetime-local: "2026-05-01T09:00" (بدون Z)
+- الرعاة: استخرج كل الشركات والجهات الراعية مع مستواها (ذهبي، فضي، برونزي، شريك استراتيجي، بلاتيني، راعي تقني)
+- المسارات: استخرج كل فئات/مسارات الهاكاثون
+- الجوائز: استخرج كل الجوائز مع قيمتها
+- إذا كانت بعض البيانات غير موجودة، اتركها فارغة` },
           { inlineData: { mimeType, data: base64Data } },
         ]}],
         generationConfig: { responseMimeType: "application/json", responseSchema: schema },
@@ -461,7 +467,15 @@ export default function HackathonCreationWizard({ onClose }) {
 
       if (extractedText) {
         const extracted = JSON.parse(extractedText);
+        console.log("[Gemini Extract] Raw data:", extracted);
         const merged = { ...INITIAL_DATA };
+
+        // Normalize datetime to YYYY-MM-DDTHH:MM format for datetime-local inputs
+        const normalizeDate = (d) => {
+          if (!d || typeof d !== "string") return "";
+          // Remove Z, seconds, milliseconds — keep YYYY-MM-DDTHH:MM
+          return d.replace(/Z$/, "").replace(/:\d{2}\.\d+$/, "").replace(/:\d{2}$/, (m) => m).substring(0, 16);
+        };
 
         for (const key of ["title", "description", "targetAudience", "contactEmail", "format"]) {
           if (extracted[key]) merged[key] = extracted[key];
@@ -470,18 +484,19 @@ export default function HackathonCreationWizard({ onClose }) {
         if (extracted.schedule) {
           merged.schedule = { ...INITIAL_DATA.schedule };
           for (const k of ["registrationOpen", "registrationClose", "judgingStart", "judgingEnd"]) {
-            if (extracted.schedule[k]) merged.schedule[k] = extracted.schedule[k];
+            if (extracted.schedule[k]) merged.schedule[k] = normalizeDate(extracted.schedule[k]);
           }
-          if (extracted.schedule.hackathonStart) merged.hackathonStart = extracted.schedule.hackathonStart;
-          if (extracted.schedule.hackathonEnd) merged.hackathonEnd = extracted.schedule.hackathonEnd;
-          if (extracted.schedule.sessionsStart) merged.sessionsStart = extracted.schedule.sessionsStart;
-          if (extracted.schedule.sessionsEnd) merged.sessionsEnd = extracted.schedule.sessionsEnd;
+          if (extracted.schedule.hackathonStart) merged.hackathonStart = normalizeDate(extracted.schedule.hackathonStart);
+          if (extracted.schedule.hackathonEnd) merged.hackathonEnd = normalizeDate(extracted.schedule.hackathonEnd);
+          if (extracted.schedule.sessionsStart) merged.sessionsStart = normalizeDate(extracted.schedule.sessionsStart);
+          if (extracted.schedule.sessionsEnd) merged.sessionsEnd = normalizeDate(extracted.schedule.sessionsEnd);
         }
         for (const key of ["tracks", "prizes", "sponsors", "faq"]) {
           if (Array.isArray(extracted[key]) && extracted[key].length > 0) {
             merged[key] = extracted[key].map((item) => ({ ...item, id: crypto.randomUUID() }));
           }
         }
+        console.log("[Gemini Extract] Merged data:", JSON.stringify(merged, null, 2));
         setData(merged);
       }
       setShowUpload(false);

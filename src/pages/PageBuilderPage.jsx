@@ -156,6 +156,7 @@ export default function PageBuilderPage() {
     setError(null);
     try {
       const h = hackathon || {};
+      console.log("[PageBuilder] Hackathon data for generation:", h);
       const prompt = `Create a stunning, complete, single-page HTML landing page for this hackathon.
 
 IMPORTANT: Include these CDN libraries in the <head>:
@@ -172,9 +173,13 @@ Tracks: ${(h.tracks || []).map(t => t.name + ": " + (t.description || "")).join(
 Prizes: ${(h.prizes || []).map(p => (p.place || "") + " " + (p.title || "") + ": " + (p.value || "")).join("; ") || "None"}
 Schedule: Reg: ${h.schedule?.registrationOpen || "TBD"} - ${h.schedule?.registrationClose || "TBD"}
 Hackathon: ${h.hackathonStart || "TBD"} - ${h.hackathonEnd || "TBD"}
-Sponsors: ${(h.sponsors || []).map(s => s.name + " (" + (s.tier || "") + ")").join(", ") || "None"}
+Sponsors (MUST show ALL with logos if available):
+${(h.sponsors || []).map(s => `- ${s.name} (${s.tier || "partner"})${s.website ? " - " + s.website : ""}${s.logoUrl ? " - Logo: " + s.logoUrl : ""}`).join("\n") || "None"}
 FAQ: ${(h.faq || []).map(f => "Q: " + f.question + " A: " + f.answer).join("; ") || "None"}
+Location: ${h.location?.name || ""} ${h.location?.address || ""}
 Primary Color: ${h.branding?.primaryColor || "#7C3AED"}
+
+CRITICAL: You MUST include ALL sponsors listed above in a dedicated sponsors section with their tier badges. If dates say "TBD", show "سيتم الإعلان قريباً".
 
 REQUIREMENTS:
 - Use Tailwind CSS (via CDN already included)
@@ -365,6 +370,7 @@ Return ONLY raw HTML starting with <!DOCTYPE html>.`;
           <div className={`${layout === "split" ? "w-1/2" : "w-full"} border-r border-[#313244] overflow-hidden`}>
             {currentFile ? (
               <Editor
+                key={activeFile}
                 height="100%"
                 language={currentFile.language}
                 value={currentFile.value}

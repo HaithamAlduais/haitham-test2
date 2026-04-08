@@ -146,7 +146,7 @@ app.post('/api/ai/extract-from-file', require('./middleware/requireRole')('Organ
 
     // Send file directly to Gemini as inline data
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const fileBase64 = uploaded.buffer.toString('base64');
     const mimeType = uploaded.mimeType || 'application/octet-stream';
@@ -206,7 +206,7 @@ app.post('/api/ai/wizard-suggest', require('./middleware/requireRole')('Organize
     if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const { targetStep, currentData } = req.body;
     if (!targetStep) return res.status(400).json({ error: "targetStep required" });
@@ -256,7 +256,7 @@ app.post('/api/ai/generate-landing-page', require('./middleware/requireRole')('O
     if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const { wizardData } = req.body;
 
     const prompt = `Create a complete, beautiful, single-page HTML landing page for this hackathon. Include embedded CSS and minimal JavaScript. Make it visually stunning, responsive, and professional.
@@ -307,7 +307,7 @@ app.post('/api/ai/improve-landing-page', require('./middleware/requireRole')('Or
     if (!apiKey) return res.status(500).json({ error: "Gemini API key not configured" });
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const { currentHtml, instruction } = req.body;
 
     const prompt = `Modify this HTML landing page based on the instruction. Return ONLY the complete modified HTML, no explanations.

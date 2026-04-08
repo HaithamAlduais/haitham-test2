@@ -18,8 +18,32 @@ export default function PageBuilderPage() {
 
   const [hackathon, setHackathon] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(""); // JSX code
   const [layout, setLayout] = useState("split");
+
+  // Build preview HTML that renders JSX with React + Babel
+  const buildPreviewHtml = (jsxCode) => {
+    if (!jsxCode) return "";
+    return `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>* { font-family: 'Tajawal', sans-serif; } body { margin: 0; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+${jsxCode}
+  </script>
+</body>
+</html>`;
+  };
   const [generating, setGenerating] = useState(false);
   const [improving, setImproving] = useState(false);
   const [chatPrompt, setChatPrompt] = useState("");
@@ -44,9 +68,10 @@ export default function PageBuilderPage() {
     });
     if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
     const data = await res.json();
-    let html = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    html = html.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
-    return html;
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    // Strip markdown code blocks (```jsx, ```html, ```javascript, etc.)
+    text = text.replace(/^```(?:jsx|javascript|html|tsx|js)?\n?/i, "").replace(/\n?```$/i, "").trim();
+    return text;
   };
 
   // ── Load hackathon ─────────────────────────────────────────────────────
@@ -56,7 +81,18 @@ export default function PageBuilderPage() {
       .catch(() => apiGet(`/api/events/${id}`))
       .then((data) => {
         setHackathon(data);
-        if (data.customPageHtml) setCode(data.customPageHtml);
+        // Load JSX code if available, otherwise try to extract from HTML
+        if (data.customPageJsx) {
+          setCode(data.customPageJsx);
+        } else if (data.customPageHtml) {
+          // Try to extract JSX from existing HTML (between <script type="text/babel"> tags)
+          const match = data.customPageHtml.match(/<script type="text\/babel">\n?([\s\S]*?)\n?\s*<\/script>/);
+          if (match) {
+            setCode(match[1].trim());
+          } else {
+            setCode(data.customPageHtml);
+          }
+        }
       })
       .catch(() => navigate("/events"))
       .finally(() => setLoading(false));
@@ -68,11 +104,9 @@ export default function PageBuilderPage() {
     setError(null);
     try {
       const h = hackathon || {};
-      const prompt = `Create a stunning, complete, single-page HTML landing page for this hackathon. Everything in ONE file — HTML, CSS, JS all embedded.
+      const prompt = `Create a stunning React JSX landing page for this hackathon. Write ONLY the JSX code — no HTML wrapper, no imports.
 
-IMPORTANT: Include these in the <head>:
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+The code will run inside a <script type="text/babel"> tag with React 18 + ReactDOM + Tailwind CSS CDN already loaded globally.
 
 HACKATHON DATA:
 Title: ${h.title || "Hackathon"}
@@ -93,14 +127,16 @@ ${(h.faq || []).map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n") || "None
 Primary Color: ${h.branding?.primaryColor || "#7C3AED"}
 
 REQUIREMENTS:
-- Single HTML file with embedded <style> and <script>
-- Tailwind CSS via CDN
-- Tajawal font, dir="rtl" for Arabic
-- Sections: Hero with gradient + title, About, Tracks, Prizes, Schedule with countdown timer, Sponsors with ALL names, FAQ accordion, Register CTA, Footer
-- Beautiful modern design with gradients, shadows, animations
-- Responsive
-- Smooth scroll
-- Return ONLY raw HTML starting with <!DOCTYPE html>`;
+- Write a single React component called App with sub-components
+- Use React.useState for interactive features (FAQ accordion, countdown, mobile menu)
+- Use Tailwind CSS classes for ALL styling (loaded via CDN)
+- dir="rtl" on the root div for Arabic
+- Sections: Hero with gradient, About, Tracks grid, Prizes, Schedule with countdown timer, Sponsors with ALL names, FAQ accordion, Register CTA, Footer
+- Beautiful modern design: gradients, shadows, rounded corners, animations
+- Responsive (mobile-first)
+- Smooth scroll navigation
+- End with: ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+- Return ONLY the JSX code, no markdown, no backticks, no explanation`;
 
       const html = await callGemini(prompt);
       if (html) {
@@ -123,14 +159,16 @@ REQUIREMENTS:
     setChatHistory(prev => [...prev, { role: "user", text: userMsg }]);
     setImproving(true);
     try {
-      const html = await callGemini(`Modify this HTML page. Keep ALL content. Return ONLY complete HTML.
+      const html = await callGemini(`Modify this React JSX code based on the instruction. Keep ALL existing content and components. Return ONLY the modified JSX code.
 
-CURRENT HTML:
+The code runs inside <script type="text/babel"> with React 18 + Tailwind CSS CDN loaded globally. No imports needed.
+
+CURRENT JSX CODE:
 ${code.substring(0, 25000)}
 
 INSTRUCTION: ${userMsg}
 
-Return ONLY raw HTML starting with <!DOCTYPE html>.`);
+Return ONLY the JSX code — no markdown, no backticks, no explanation. Must end with ReactDOM.createRoot(document.getElementById('root')).render(<App />);`);
       if (html) {
         setCode(html);
         setChatHistory(prev => [...prev, { role: "ai", text: "تم التعديل ✅" }]);
@@ -147,8 +185,9 @@ Return ONLY raw HTML starting with <!DOCTYPE html>.`);
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiPatch(`/api/hackathons/${id}`, { customPageHtml: code, hasCustomPage: true });
-      await apiPatch(`/api/events/${id}`, { customPageHtml: code, hasCustomPage: true }).catch(() => {});
+      const fullHtml = buildPreviewHtml(code);
+      await apiPatch(`/api/hackathons/${id}`, { customPageHtml: fullHtml, customPageJsx: code, hasCustomPage: true });
+      await apiPatch(`/api/events/${id}`, { customPageHtml: fullHtml, customPageJsx: code, hasCustomPage: true }).catch(() => {});
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) { setError(err.message); }
@@ -218,7 +257,7 @@ Return ONLY raw HTML starting with <!DOCTYPE html>.`);
             {code ? (
               <Editor
                 height="100%"
-                language="html"
+                language="javascript"
                 value={code}
                 onChange={(val) => setCode(val || "")}
                 theme="vs-dark"
@@ -255,7 +294,7 @@ Return ONLY raw HTML starting with <!DOCTYPE html>.`);
         {(layout === "preview" || layout === "split") && (
           <div className={layout === "split" ? "w-1/2" : "w-full"}>
             {code ? (
-              <iframe srcDoc={code} className="w-full h-full bg-white border-0" title="Preview" sandbox="allow-scripts allow-same-origin" />
+              <iframe srcDoc={buildPreviewHtml(code)} className="w-full h-full bg-white border-0" title="Preview" sandbox="allow-scripts allow-same-origin" />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center space-y-4">

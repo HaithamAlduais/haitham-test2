@@ -249,66 +249,55 @@ Return ONLY the JSX code — no markdown, no backticks, no explanation. Must end
         </div>
       </header>
 
-      {/* ═══ Main: Editor + Preview ═══ */}
+      {/* ═══ Main ═══ */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Editor */}
-        {(layout === "editor" || layout === "split") && (
-          <div className={layout === "split" ? "w-1/2 border-r border-[#313244]" : "w-full"}>
-            {code ? (
-              <Editor
-                height="100%"
-                language="javascript"
-                value={code}
-                onChange={(val) => setCode(val || "")}
-                theme="vs-dark"
-                options={{
-                  fontSize: 13,
-                  fontFamily: "'Fira Code', monospace",
-                  minimap: { enabled: false },
-                  padding: { top: 8 },
-                  scrollBeyondLastLine: false,
-                  wordWrap: "on",
-                  tabSize: 2,
-                  automaticLayout: true,
-                  lineNumbers: "on",
-                  bracketPairColorization: { enabled: true },
-                }}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-4">
-                  <Sparkles className="h-12 w-12 text-[#89b4fa] mx-auto opacity-40" />
-                  <p className="text-[#6c7086] text-sm">أنشئ الصفحة أو ارفع ملف HTML</p>
-                  <button onClick={handleGenerate} disabled={generating}
-                    className="flex items-center gap-2 mx-auto px-4 py-2 rounded bg-[#89b4fa] text-[#1e1e2e] font-bold text-sm hover:bg-[#74c7ec] disabled:opacity-50">
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    {generating ? "جاري الإنشاء..." : "✨ إنشاء بالذكاء الاصطناعي"}
-                  </button>
-                </div>
+        {!code ? (
+          /* Empty state — single centered generate button */
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-6 max-w-md">
+              <Sparkles className="h-16 w-16 text-[#89b4fa] mx-auto opacity-40" />
+              <h2 className="text-xl font-bold text-[#cdd6f4]">أنشئ صفحة الهاكاثون</h2>
+              <p className="text-sm text-[#6c7086]">اضغط الزر وسيقوم الذكاء الاصطناعي بإنشاء صفحة React احترافية مع Tailwind CSS</p>
+              <button onClick={handleGenerate} disabled={generating}
+                className="flex items-center gap-2 mx-auto px-6 py-3 rounded-lg bg-[#89b4fa] text-[#1e1e2e] font-bold text-base hover:bg-[#74c7ec] disabled:opacity-50 transition-colors">
+                {generating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                {generating ? "جاري الإنشاء..." : "✨ إنشاء بالذكاء الاصطناعي"}
+              </button>
+              <p className="text-xs text-[#6c7086]">أو ارفع ملف JSX/HTML من الأعلى</p>
+            </div>
+          </div>
+        ) : (
+          /* Editor + Preview */
+          <>
+            {(layout === "editor" || layout === "split") && (
+              <div className={layout === "split" ? "w-1/2 border-r border-[#313244]" : "w-full"}>
+                <Editor
+                  height="100%"
+                  language="javascript"
+                  value={code}
+                  onChange={(val) => setCode(val || "")}
+                  theme="vs-dark"
+                  options={{
+                    fontSize: 13,
+                    fontFamily: "'Fira Code', monospace",
+                    minimap: { enabled: false },
+                    padding: { top: 8 },
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on",
+                    tabSize: 2,
+                    automaticLayout: true,
+                    lineNumbers: "on",
+                    bracketPairColorization: { enabled: true },
+                  }}
+                />
               </div>
             )}
-          </div>
-        )}
-
-        {/* Preview */}
-        {(layout === "preview" || layout === "split") && (
-          <div className={layout === "split" ? "w-1/2" : "w-full"}>
-            {code ? (
-              <iframe srcDoc={buildPreviewHtml(code)} className="w-full h-full bg-white border-0" title="Preview" sandbox="allow-scripts allow-same-origin" />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-4">
-                  <Sparkles className="h-12 w-12 text-[#89b4fa] mx-auto opacity-40" />
-                  <p className="text-[#6c7086]">لم يتم إنشاء الصفحة بعد</p>
-                  <button onClick={handleGenerate} disabled={generating}
-                    className="flex items-center gap-2 mx-auto px-4 py-2 rounded bg-[#89b4fa] text-[#1e1e2e] font-bold text-sm hover:bg-[#74c7ec] disabled:opacity-50">
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    {generating ? "..." : "✨ إنشاء بالذكاء الاصطناعي"}
-                  </button>
-                </div>
+            {(layout === "preview" || layout === "split") && (
+              <div className={layout === "split" ? "w-1/2" : "w-full"}>
+                <iframe srcDoc={buildPreviewHtml(code)} className="w-full h-full bg-white border-0" title="Preview" sandbox="allow-scripts allow-same-origin" />
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
 

@@ -19,20 +19,26 @@ import LandingPageStep from "@/components/hackathon/steps/LandingPageStep";
 //   step === 2           →  RegistrationFormStep (placeholder)
 //   step === 3           →  LandingPageStep
 // ══════════════════════════════════════════════════════════════════════════════
-export default function HackathonCreationWizard({ onClose }) {
+export default function HackathonCreationWizard({ onClose, initialData, hackathonId }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  const isEditMode = Boolean(initialData && hackathonId);
+
   // ── Navigation state ───────────────────────────────────────────────────────
-  const [showUpload, setShowUpload] = useState(true);
+  const [showUpload, setShowUpload] = useState(!isEditMode);
   const [step, setStep] = useState(1);
 
   // ── Form data ──────────────────────────────────────────────────────────────
-  const [data, setData] = useState(INITIAL_DATA);
+  const [data, setData] = useState(isEditMode ? initialData : INITIAL_DATA);
   const updateData = (partial) => setData((prev) => ({ ...prev, ...partial }));
 
   // ── Registration form (Phase 2) ────────────────────────────────────────────
-  const [registrationForm, setRegistrationForm] = useState({ fields: [] });
+  const [registrationForm, setRegistrationForm] = useState(
+    isEditMode && initialData?.registrationForm
+      ? initialData.registrationForm
+      : { fields: [] }
+  );
 
   // ── Submission state ───────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
@@ -43,10 +49,14 @@ export default function HackathonCreationWizard({ onClose }) {
     setError(null);
     setSubmitting(true);
     try {
+      if (isEditMode) {
+        await apiPatch(`/api/hackathons/${hackathonId}`, { ...data, registrationForm, isPublic });
+        return { id: hackathonId, slug: initialData.slug || hackathonId };
+      }
       const result = await apiPost("/api/hackathons", { ...data, registrationForm, isPublic });
       return result; // { id, slug }
     } catch (err) {
-      setError(err.message || "Failed to create hackathon.");
+      setError(err.message || (isEditMode ? "Failed to update hackathon." : "Failed to create hackathon."));
       return null;
     } finally {
       setSubmitting(false);
@@ -54,12 +64,13 @@ export default function HackathonCreationWizard({ onClose }) {
   };
 
   const handleSaveDraft = async (pageHtml) => {
+    // Include page HTML in the main save if available
+    if (pageHtml) {
+      data.customPageHtml = pageHtml;
+      data.hasCustomPage = true;
+    }
     const result = await saveHackathon(false);
     if (result) {
-      // Save the generated page HTML if available
-      if (pageHtml) {
-        apiPatch(`/api/hackathons/${result.id}`, { customPageHtml: pageHtml, hasCustomPage: true }).catch(() => {});
-      }
       navigate(`/hackathons/${result.slug || result.id}`);
       onClose?.();
     }

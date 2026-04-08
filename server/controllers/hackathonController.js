@@ -79,6 +79,8 @@ async function createHackathon(req, res) {
       targetAudience: req.body.targetAudience || "",
       location: req.body.location || { name: "", address: "" },
       judgingMode: req.body.judgingMode || "during",
+      customPageHtml: req.body.customPageHtml || "",
+      hasCustomPage: req.body.hasCustomPage === true,
       status: HACKATHON_STATUS.DRAFT,
       isPublic: isPublic === true,
       registrationCount: 0,

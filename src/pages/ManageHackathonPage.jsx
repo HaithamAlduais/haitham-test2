@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles, Download, BarChart3, Layout } from "lucide-react";
+import { ArrowLeft, Users, FileText, CheckCircle, XCircle, Clock, Sparkles, Download, BarChart3, Layout, Pencil } from "lucide-react";
+import HackathonCreationWizard from "@/components/hackathon/HackathonCreationWizard";
+import { INITIAL_DATA } from "@/components/hackathon/steps/HackathonDetailsStep";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 const STATUS_VARIANT = {
@@ -49,6 +51,7 @@ export default function ManageHackathonPage() {
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedRegs, setSelectedRegs] = useState([]);
   const [aiScreening, setAiScreening] = useState(false);
+  const [showEditWizard, setShowEditWizard] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -195,6 +198,14 @@ export default function ManageHackathonPage() {
             )}
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={() => setShowEditWizard(true)}
+            >
+              <Pencil className="h-4 w-4" />
+              {t("edit") || "تعديل / Edit"}
+            </Button>
             {nextStatus && (
               <Button
                 onClick={() => updateHackathonStatus(nextStatus)}
@@ -413,6 +424,22 @@ export default function ManageHackathonPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Hackathon Wizard Overlay */}
+      {showEditWizard && (
+        <HackathonCreationWizard
+          onClose={() => {
+            setShowEditWizard(false);
+            fetchAll(); // refresh data after edit
+          }}
+          initialData={{
+            ...INITIAL_DATA,
+            ...hackathon,
+            registrationForm: hackathon.registrationForm || { fields: [] },
+          }}
+          hackathonId={hackathon.id}
+        />
+      )}
     </DashboardLayout>
   );
 }

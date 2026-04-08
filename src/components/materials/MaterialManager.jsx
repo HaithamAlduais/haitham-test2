@@ -1,5 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { apiPatch, apiPost } from "../../utils/apiClient";
+import { useLanguage } from "@/context/LanguageContext";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { FileText, Link2, Upload, Trash2, Plus, ExternalLink } from "lucide-react";
 
 /**
  * MaterialManager
@@ -12,13 +17,18 @@ import { apiPatch, apiPost } from "../../utils/apiClient";
  * @param {Function} onUpdate - Callback when materials change
  */
 const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUpdate }) => {
-  const [materials, setMaterials] = useState(initialMaterials || []);
+  const { language } = useLanguage();
+  const isAr = language === "ar";
 
+  const [materials, setMaterials] = useState(initialMaterials || []);
   const [loading, setLoading] = useState(false);
   const [errorMSG, setErrorMSG] = useState("");
 
   const [linkUrl, setLinkUrl] = useState("");
   const [linkName, setLinkName] = useState("");
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
 
   const saveMaterials = async (newMaterials) => {
     setLoading(true);
@@ -29,7 +39,7 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
       if (onUpdate) onUpdate(newMaterials);
     } catch (err) {
       console.error(err);
-      setErrorMSG("Failed to update materials.");
+      setErrorMSG(isAr ? "فشل تحديث المواد." : "Failed to update materials.");
     } finally {
       setLoading(false);
     }
@@ -52,27 +62,24 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
     await saveMaterials([...materials, newMaterial]);
     setLinkName("");
     setLinkUrl("");
+    setShowLinkForm(false);
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+  const uploadFile = async (file) => {
     if (!file) return;
-
     setLoading(true);
     setErrorMSG("");
 
     try {
-      // 1) Get pre-signed URL from backend
-      const res = await apiPost('/api/upload/presigned-url', {
+      const res = await apiPost("/api/upload/presigned-url", {
         fileName: file.name,
         contentType: file.type || "application/octet-stream",
         fileType: entityType,
-        fileId: entityId
+        fileId: entityId,
       });
 
       const { uploadUrl, downloadURL, storagePath } = res;
 
-      // 2) Upload file directly to Cloudflare R2
       const uploadRes = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
@@ -83,10 +90,9 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
       });
 
       if (!uploadRes.ok) {
-        throw new Error("Failed to upload file to Cloudflare storage");
+        throw new Error("Failed to upload file to storage");
       }
 
-      // 3) Create new material object
       const newMaterial = {
         id: Date.now().toString(),
         type: "file",
@@ -98,123 +104,237 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
       await saveMaterials([...materials, newMaterial]);
     } catch (err) {
       console.error(err);
-      setErrorMSG("Failed to upload file. Please check storage permissions.");
+      setErrorMSG(isAr ? "فشل رفع الملف." : "Failed to upload file. Please check storage permissions.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    uploadFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    uploadFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragOver(false);
+  };
+
   const handleDelete = async (mat) => {
-    if (!window.confirm("Are you sure you want to remove this material?")) return;
+    const confirmMsg = isAr
+      ? "هل أنت متأكد من حذف هذه المادة؟"
+      : "Are you sure you want to remove this material?";
+    if (!window.confirm(confirmMsg)) return;
 
     setLoading(true);
     try {
       if (mat.type === "file" && mat.storagePath) {
         try {
-          await apiPost('/api/upload/delete-file', { storagePath: mat.storagePath });
+          await apiPost("/api/upload/delete-file", { storagePath: mat.storagePath });
         } catch (storageErr) {
           console.warn("Could not delete from storage (maybe already deleted):", storageErr);
         }
       }
-      const newMaterials = materials.filter(m => m.id !== mat.id);
+      const newMaterials = materials.filter((m) => m.id !== mat.id);
       await saveMaterials(newMaterials);
     } catch (err) {
       console.error(err);
-      setErrorMSG("Failed to remove material.");
+      setErrorMSG(isAr ? "فشل حذف المادة." : "Failed to remove material.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="border-2 border-border bg-secondary-background p-6 mt-6">
-      <h2 className="font-display font-bold text-lg text-foreground mb-4">
-        Materials & Links
-      </h2>
-
-      <div>
-        {errorMSG && (
-          <div className="border-2 border-destructive bg-destructive/10 p-3 mb-4">
-            <p className="font-mono text-sm text-destructive">{errorMSG}</p>
+    <div className="rounded-base border-2 border-border bg-card p-6 mt-6 shadow-shadow" dir={isAr ? "rtl" : "ltr"}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-heading text-lg font-bold text-foreground flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          {isAr ? "المواد والروابط" : "Materials & Links"}
+        </h2>
+        {canEdit && (
+          <div className="flex gap-2">
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={() => setShowLinkForm(!showLinkForm)}
+            >
+              <Link2 className="h-4 w-4" />
+              {isAr ? "رابط" : "Link"}
+            </Button>
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+            >
+              <Upload className="h-4 w-4" />
+              {isAr ? "رفع" : "Upload"}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileUpload}
+              disabled={loading}
+            />
           </div>
         )}
+      </div>
 
-        {/* List Materials */}
-        {materials.length > 0 ? (
-          <ul className="space-y-3 mb-6">
-            {materials.map((mat) => (
-              <li key={mat.id} className="flex items-center justify-between p-3 border-2 border-border bg-background">
+      {/* Error */}
+      {errorMSG && (
+        <div className="rounded-base border-2 border-destructive bg-destructive/10 p-3 mb-4">
+          <p className="text-sm font-bold text-destructive">{errorMSG}</p>
+        </div>
+      )}
+
+      {/* Add Link Form */}
+      {showLinkForm && canEdit && (
+        <div className="rounded-base border-2 border-border bg-secondary-background p-4 mb-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="font-bold text-sm">
+                {isAr ? "اسم الرابط" : "Link Name"}
+              </Label>
+              <Input
+                placeholder={isAr ? "مثال: المستندات" : "e.g. Documentation"}
+                value={linkName}
+                onChange={(e) => setLinkName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="font-bold text-sm">
+                {isAr ? "الرابط" : "URL"}
+              </Label>
+              <Input
+                type="url"
+                placeholder="https://..."
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={() => {
+                setShowLinkForm(false);
+                setLinkName("");
+                setLinkUrl("");
+              }}
+            >
+              {isAr ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleAddLink}
+              disabled={loading || !linkName || !linkUrl}
+            >
+              <Plus className="h-4 w-4" />
+              {isAr ? "إضافة" : "Add"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Drop Zone (visible when editable and no materials yet, or always as upload area) */}
+      {canEdit && (
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => fileInputRef.current?.click()}
+          className={`rounded-base border-2 border-dashed cursor-pointer transition-colors mb-4 p-6 text-center ${
+            dragOver
+              ? "border-main bg-main/10"
+              : "border-border bg-secondary-background hover:border-main/50"
+          } ${loading ? "opacity-50 pointer-events-none" : ""}`}
+        >
+          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm font-bold text-muted-foreground">
+            {loading
+              ? isAr
+                ? "جاري الرفع..."
+                : "Uploading..."
+              : isAr
+              ? "اسحب الملف هنا أو اضغط للرفع"
+              : "Drag & drop a file here, or click to upload"}
+          </p>
+        </div>
+      )}
+
+      {/* Materials List */}
+      {materials.length > 0 ? (
+        <div className="space-y-2">
+          {materials.map((mat) => (
+            <div
+              key={mat.id}
+              className="rounded-base border-2 border-border bg-background p-3 flex items-center justify-between gap-3 hover:shadow-shadow transition-shadow"
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex-shrink-0 w-9 h-9 rounded-base border-2 border-border bg-secondary-background flex items-center justify-center">
+                  {mat.type === "file" ? (
+                    <FileText className="h-4 w-4 text-foreground" />
+                  ) : (
+                    <Link2 className="h-4 w-4 text-main" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{mat.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {mat.type === "file"
+                      ? isAr
+                        ? "ملف"
+                        : "File"
+                      : mat.url}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <a
                   href={mat.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  download={mat.name || true}
-                  className="flex items-center gap-3 text-main hover:underline flex-1 truncate font-mono text-sm"
+                  download={mat.type === "file" ? mat.name : undefined}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-base border-2 border-border bg-card hover:bg-secondary-background transition-colors"
                 >
-                  {mat.type === "file" ? (
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                  ) : (
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                  )}
-                  <span className="font-bold truncate">{mat.name}</span>
+                  <ExternalLink className="h-3.5 w-3.5 text-foreground" />
                 </a>
-
                 {canEdit && (
-                  <button onClick={() => handleDelete(mat)} className="text-destructive hover:text-destructive/80 ml-4 p-1">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <button
+                    onClick={() => handleDelete(mat)}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-base border-2 border-border bg-card hover:bg-destructive/10 hover:border-destructive transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </button>
                 )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="font-mono text-sm text-muted-foreground mb-6">No materials added yet.</p>
-        )}
-
-        {/* Add Controls */}
-        {canEdit && (
-          <div className="border-t-2 border-border pt-5 flex flex-col gap-4">
-            {/* Add Link */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                placeholder="Link Name (e.g. Doc)"
-                value={linkName}
-                onChange={e => setLinkName(e.target.value)}
-                className="flex-1 px-4 py-2 border-2 border-border bg-background text-foreground font-mono text-sm focus:outline-none focus:border-main"
-              />
-              <input
-                type="url"
-                placeholder="URL (https://...)"
-                value={linkUrl}
-                onChange={e => setLinkUrl(e.target.value)}
-                className="flex-1 px-4 py-2 border-2 border-border bg-background text-foreground font-mono text-sm focus:outline-none focus:border-main"
-              />
-              <button
-                onClick={handleAddLink}
-                disabled={loading || !linkName || !linkUrl}
-                className="bg-black text-white px-6 py-2 border-2 border-black hover:bg-card hover:text-black font-mono font-bold text-sm uppercase tracking-[0.12em] transition-colors disabled:opacity-50"
-              >
-                Add Link
-              </button>
+              </div>
             </div>
-
-            {/* Upload File */}
-            <div className="mt-2 text-right">
-              <label className={`inline-flex items-center gap-2 cursor-pointer bg-card text-foreground px-6 py-2 border-2 border-border hover:bg-secondary-background font-mono font-bold text-sm uppercase tracking-[0.12em] transition-colors ${loading ? "opacity-50" : ""}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                {loading ? "Uploading..." : "Upload File"}
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  disabled={loading}
-                />
-              </label>
-            </div>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        !canEdit && (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            {isAr ? "لا توجد مواد مضافة بعد." : "No materials added yet."}
+          </p>
+        )
+      )}
     </div>
   );
 };

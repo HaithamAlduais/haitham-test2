@@ -294,6 +294,7 @@ Return ONLY raw HTML starting with <!DOCTYPE html>.`;
 
   const fileNames = Object.keys(files);
   const currentFile = files[activeFile];
+  console.log("[PageBuilder] Active file:", activeFile, "Content length:", currentFile?.value?.length);
 
   return (
     <div className="flex flex-col h-screen bg-[#1e1e2e] text-[#cdd6f4]">

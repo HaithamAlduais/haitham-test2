@@ -330,6 +330,8 @@ export default function HackathonCreationWizard({ onClose }) {
   const [newTrack, setNewTrack] = useState({ name: "", description: "" });
   const [newPrize, setNewPrize] = useState({ ...EMPTY_PRIZE });
   const [newSponsor, setNewSponsor] = useState({ ...EMPTY_SPONSOR });
+  const [newFaqQuestion, setNewFaqQuestion] = useState("");
+  const [newFaqAnswer, setNewFaqAnswer] = useState("");
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const schedule = data.schedule || {};
@@ -508,6 +510,13 @@ Important:
           }
         }
         console.log("[Gemini Extract] Merged data:", JSON.stringify(merged, null, 2));
+        console.log("[Gemini Extract] merged.schedule:", JSON.stringify(merged.schedule, null, 2));
+        console.log("[Gemini Extract] merged.hackathonStart:", merged.hackathonStart);
+        console.log("[Gemini Extract] merged.hackathonEnd:", merged.hackathonEnd);
+        console.log("[Gemini Extract] merged.sessionsStart:", merged.sessionsStart);
+        console.log("[Gemini Extract] merged.sessionsEnd:", merged.sessionsEnd);
+        console.log("[Gemini Extract] merged.sponsors:", JSON.stringify(merged.sponsors, null, 2));
+        console.log("[Gemini Extract] merged.faq:", JSON.stringify(merged.faq, null, 2));
         setData(merged);
       }
       setShowUpload(false);
@@ -1058,6 +1067,70 @@ Important:
               </div>
               <Button variant="neutral" size="sm" onClick={addSponsor} disabled={!newSponsor.name.trim()}>
                 <Plus className="h-4 w-4" /> {t("addSponsor") || "\u0623\u0636\u0641 \u0631\u0627\u0639\u064a"}
+              </Button>
+            </div>
+          </Section>
+
+          {/* ────────────────── Section 6: FAQ ────────────────── */}
+          <Section title={t("faqTitle") || "\u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0634\u0627\u0626\u0639\u0629"} defaultOpen={false}>
+            {/* Existing FAQs */}
+            {(data.faq || []).length > 0 && (
+              <div className="space-y-3">
+                {(data.faq || []).map((item, idx) => (
+                  <div key={item.id || idx} className="rounded-base border-2 border-border bg-muted/30 p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={item.question || ""}
+                          onChange={(e) => {
+                            const updated = [...(data.faq || [])];
+                            updated[idx] = { ...updated[idx], question: e.target.value };
+                            updateData({ faq: updated });
+                          }}
+                          placeholder={t("faqQuestionPlaceholder") || "\u0627\u0644\u0633\u0624\u0627\u0644"}
+                        />
+                        <Textarea
+                          value={item.answer || ""}
+                          onChange={(e) => {
+                            const updated = [...(data.faq || [])];
+                            updated[idx] = { ...updated[idx], answer: e.target.value };
+                            updateData({ faq: updated });
+                          }}
+                          placeholder={t("faqAnswerPlaceholder") || "\u0627\u0644\u062c\u0648\u0627\u0628"}
+                          rows={2}
+                        />
+                      </div>
+                      <button onClick={() => updateData({ faq: (data.faq || []).filter((_, i) => i !== idx) })} className="shrink-0 text-muted-foreground hover:text-destructive mt-2">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add FAQ */}
+            <div className="rounded-base border-2 border-dashed border-border p-4 space-y-3">
+              <div className="space-y-2">
+                <Input
+                  value={newFaqQuestion}
+                  onChange={(e) => setNewFaqQuestion(e.target.value)}
+                  placeholder={t("faqQuestionPlaceholder") || "\u0627\u0644\u0633\u0624\u0627\u0644"}
+                />
+                <Textarea
+                  value={newFaqAnswer}
+                  onChange={(e) => setNewFaqAnswer(e.target.value)}
+                  placeholder={t("faqAnswerPlaceholder") || "\u0627\u0644\u062c\u0648\u0627\u0628"}
+                  rows={2}
+                />
+              </div>
+              <Button variant="neutral" size="sm" onClick={() => {
+                if (!newFaqQuestion.trim()) return;
+                updateData({ faq: [...(data.faq || []), { id: crypto.randomUUID(), question: newFaqQuestion, answer: newFaqAnswer }] });
+                setNewFaqQuestion("");
+                setNewFaqAnswer("");
+              }} disabled={!newFaqQuestion.trim()}>
+                <Plus className="h-4 w-4" /> {t("addFaq") || "\u0625\u0636\u0627\u0641\u0629 \u0633\u0624\u0627\u0644"}
               </Button>
             </div>
           </Section>

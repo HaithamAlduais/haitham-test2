@@ -656,7 +656,14 @@ export const translations = {
     sponsorWebsiteLabel: "Website URL",
     sponsorDescLabel: "Description",
     addSponsor: "Add Sponsor",
+    sponsorDescPlaceholder: "Brief description of the sponsor...",
     sponsorsPreview: "Preview",
+
+    // FAQ
+    faqTitle: "FAQ",
+    faqQuestionPlaceholder: "Question",
+    faqAnswerPlaceholder: "Answer",
+    addFaq: "Add Question",
 
     // Review step
     reviewTitle: "Review & Publish",
@@ -1399,7 +1406,14 @@ export const translations = {
     sponsorWebsiteLabel: "الموقع الإلكتروني",
     sponsorDescLabel: "الوصف",
     addSponsor: "إضافة راعي",
+    sponsorDescPlaceholder: "نبذة قصيرة عن الراعي...",
     sponsorsPreview: "معاينة",
+
+    // FAQ
+    faqTitle: "الأسئلة الشائعة",
+    faqQuestionPlaceholder: "السؤال",
+    faqAnswerPlaceholder: "الجواب",
+    addFaq: "إضافة سؤال",
 
     // Review step
     reviewTitle: "المراجعة والنشر",

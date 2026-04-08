@@ -713,11 +713,10 @@ export default function HackathonCreationWizard({ onClose }) {
               </div>
             )}
 
-            {(data.format || "online") === "online" && (
-              <div className="rounded-base border-2 border-border bg-muted/30 p-4">
-                <p className="text-sm text-muted-foreground">{t("discordAutoCreate") || "\u0633\u064a\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0633\u064a\u0631\u0641\u0631 Discord \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b"}</p>
-              </div>
-            )}
+            {/* Discord auto-create note — shown for ALL formats */}
+            <div className="rounded-base border-2 border-border bg-muted/30 p-4">
+              <p className="text-sm text-muted-foreground">{t("discordAutoCreate") || "سيتم إنشاء سيرفر Discord تلقائياً عند نشر الهاكاثون"}</p>
+            </div>
 
             {/* Contact Email */}
             <div className="space-y-2">

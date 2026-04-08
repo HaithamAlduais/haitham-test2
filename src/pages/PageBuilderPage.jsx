@@ -136,6 +136,14 @@ REQUIREMENTS:
 - Responsive (mobile-first)
 - Smooth scroll navigation
 - End with: ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+CRITICAL RULES:
+- Use ONLY the data provided above. Do NOT invent or make up ANY data.
+- If sponsors list is empty, show "سيتم الإعلان عن الرعاة قريباً"
+- If prizes list is empty, show "سيتم الإعلان عن الجوائز قريباً"
+- If dates say "TBD" or empty, show "سيتم التحديد لاحقاً"
+- If FAQ is empty, do NOT show FAQ section at all
+- Every sponsor name, prize, track, date MUST come from the data above — zero hallucination
 - Return ONLY the JSX code, no markdown, no backticks, no explanation`;
 
       const html = await callGemini(prompt);

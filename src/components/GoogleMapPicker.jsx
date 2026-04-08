@@ -12,7 +12,7 @@ export default function GoogleMapPicker({ location, onLocationChange, placeholde
     // Render the Google Maps components via innerHTML to avoid React's key prop conflict
     containerRef.current.innerHTML = `
       <gmpx-api-loader key="${MAPS_API_KEY}" solution-channel="GMP_GE_mapsandplacesautocomplete_v2"></gmpx-api-loader>
-      <gmp-map center="${location?.lat && location?.lng ? `${location.lat},${location.lng}` : '24.7136,46.6753'}" zoom="11" map-id="RAMSHA_MAP" style="width:100%;height:300px;border-radius:8px;overflow:hidden;border:2px solid var(--border)">
+      <gmp-map center="${location?.lat && location?.lng ? `${location.lat},${location.lng}` : '24.7136,46.6753'}" zoom="11" map-id="DEMO_MAP_ID" style="width:100%;height:300px;border-radius:8px;overflow:hidden;border:2px solid var(--border)">
         <div slot="control-block-start-inline-start" style="padding:12px">
           <gmpx-place-picker placeholder="${placeholder || 'ابحث عن الموقع...'}" style="width:300px"></gmpx-place-picker>
         </div>

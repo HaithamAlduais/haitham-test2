@@ -389,6 +389,43 @@ async function listEventSessions(req, res) {
   }
 }
 
+// ── DELETE /api/events/:eventId ────────────────────────────────────────────
+
+async function deleteEvent(req, res) {
+  try {
+    const { eventId } = req.params;
+
+    // Check ownership in events collection
+    const eventSnap = await eventsCol().doc(eventId).get();
+    if (eventSnap.exists) {
+      const data = eventSnap.data();
+      if (data.ownerUid !== req.uid && data.organizerId !== req.uid) {
+        return res.status(403).json({ error: "You do not own this event." });
+      }
+      await eventsCol().doc(eventId).delete();
+    }
+
+    // Also delete from hackathons collection (dual storage)
+    const hackSnap = await admin.firestore().collection("hackathons").doc(eventId).get();
+    if (hackSnap.exists) {
+      const data = hackSnap.data();
+      if (data.organizerId !== req.uid && data.ownerUid !== req.uid) {
+        if (!eventSnap.exists) return res.status(403).json({ error: "You do not own this event." });
+      }
+      await admin.firestore().collection("hackathons").doc(eventId).delete();
+    }
+
+    if (!eventSnap.exists && !hackSnap.exists) {
+      return res.status(404).json({ error: "Event not found." });
+    }
+
+    return res.json({ message: "Event deleted." });
+  } catch (err) {
+    console.error("deleteEvent error:", err);
+    return res.status(500).json({ error: "Failed to delete event." });
+  }
+}
+
 module.exports = {
   createEvent,
   listEvents,
@@ -398,4 +435,5 @@ module.exports = {
   updateEvent,
   updateEventStatus,
   listEventSessions,
+  deleteEvent,
 };

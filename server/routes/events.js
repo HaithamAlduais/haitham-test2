@@ -9,6 +9,7 @@ const {
   updateEventStatus,
   listPublicEvents,
   getPublicEvent,
+  deleteEvent,
 } = require("../controllers/eventController");
 
 // Nested sub-route modules (shared with hackathons)
@@ -32,6 +33,7 @@ router.get("/", requireRole("Organizer"), listEvents);
 router.get("/:eventId", requireRole("Organizer"), getEvent);
 router.patch("/:eventId", requireRole("Organizer"), updateEvent);
 router.patch("/:eventId/status", requireRole("Organizer"), updateEventStatus);
+router.delete("/:eventId", requireRole("Organizer"), deleteEvent);
 
 // Legacy: sessions linked to an event
 router.get("/:eventId/sessions", requireRole("Organizer"), listEventSessions);

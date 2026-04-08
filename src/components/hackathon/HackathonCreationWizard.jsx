@@ -321,6 +321,7 @@ export default function HackathonCreationWizard({ onClose }) {
   // ── Submission state ───────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [extractLang, setExtractLang] = useState("ar"); // ar or en — for Gemini extraction
 
   // ── AI page generator overlay ──────────────────────────────────────────────
   // Page auto-generated on publish (editor in منشئ الصفحات)
@@ -442,15 +443,25 @@ export default function HackathonCreationWizard({ onClose }) {
         }
       };
 
-      const payload = {
-        contents: [{ parts: [
-          { text: `حلل هذا الملف واستخرج معلومات الهاكاثون لتعبئة النموذج.
+      const promptAr = `حلل هذا الملف واستخرج معلومات الهاكاثون لتعبئة النموذج.
 مهم جداً:
-- التواريخ يجب أن تكون بتنسيق datetime-local: "2026-05-01T09:00" (بدون Z)
-- الرعاة: استخرج كل الشركات والجهات الراعية مع مستواها (ذهبي، فضي، برونزي، شريك استراتيجي، بلاتيني، راعي تقني)
+- التواريخ بتنسيق datetime-local: "2026-05-01T09:00" (بدون Z)
+- الرعاة: استخرج كل الشركات والجهات الراعية مع مستواها
 - المسارات: استخرج كل فئات/مسارات الهاكاثون
 - الجوائز: استخرج كل الجوائز مع قيمتها
-- إذا كانت بعض البيانات غير موجودة، اتركها فارغة` },
+- إذا كانت بعض البيانات غير موجودة، اتركها فارغة`;
+
+      const promptEn = `Analyze this file and extract hackathon information to fill the form.
+Important:
+- Dates must be in datetime-local format: "2026-05-01T09:00" (no Z)
+- Sponsors: extract all companies with their tier level
+- Tracks: extract all hackathon tracks/categories
+- Prizes: extract all prizes with their values
+- Leave empty if data is not found`;
+
+      const payload = {
+        contents: [{ parts: [
+          { text: extractLang === "ar" ? promptAr : promptEn },
           { inlineData: { mimeType, data: base64Data } },
         ]}],
         generationConfig: { responseMimeType: "application/json", responseSchema: schema },
@@ -575,6 +586,19 @@ export default function HackathonCreationWizard({ onClose }) {
               <p className="mt-2 text-muted-foreground">
                 {t("uploadFileDesc") || "\u0627\u0631\u0641\u0639 \u0645\u0644\u0641 (PDF, Word, PowerPoint) \u064a\u062d\u062a\u0648\u064a \u0639\u0644\u0649 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0627\u0644\u0647\u0627\u0643\u0627\u062b\u0648\u0646 \u0648\u0633\u064a\u0642\u0648\u0645 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0628\u0645\u0644\u0621 \u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0644 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b"}
               </p>
+            </div>
+
+            {/* Language selector for extraction */}
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-xs text-muted-foreground">{t("extractionLang") || "لغة الاستخراج:"}</span>
+              <button onClick={() => setExtractLang("ar")}
+                className={`px-3 py-1.5 rounded-base text-sm font-bold border-2 transition-colors ${extractLang === "ar" ? "bg-main text-main-foreground border-border" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}>
+                العربية
+              </button>
+              <button onClick={() => setExtractLang("en")}
+                className={`px-3 py-1.5 rounded-base text-sm font-bold border-2 transition-colors ${extractLang === "en" ? "bg-main text-main-foreground border-border" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}>
+                English
+              </button>
             </div>
 
             <div

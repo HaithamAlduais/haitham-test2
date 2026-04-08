@@ -391,57 +391,97 @@ export default function HackathonCreationWizard({ onClose }) {
   };
   const removeSponsor = (idx) => updateData({ sponsors: sponsors.filter((_, i) => i !== idx) });
 
-  // ── File upload → Gemini extraction → auto-fill form ───────────────────────
+  // ── File upload → Gemini direct extraction → auto-fill form ────────────────
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+  });
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     setUploadError(null);
     try {
-      const token = await auth.currentUser?.getIdToken(true);
-      const formData = new FormData();
-      formData.append("file", file);
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("Gemini API key not configured");
 
-      const res = await fetch("/api/ai/extract-from-file", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const base64Data = await fileToBase64(file);
+      const mimeType = file.type || "application/pdf";
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Upload failed");
-      }
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          description: { type: "STRING" },
+          targetAudience: { type: "STRING" },
+          contactEmail: { type: "STRING" },
+          format: { type: "STRING", description: "online or in-person" },
+          location: { type: "OBJECT", properties: { name: { type: "STRING" }, address: { type: "STRING" } } },
+          schedule: { type: "OBJECT", properties: {
+            registrationOpen: { type: "STRING" }, registrationClose: { type: "STRING" },
+            hackathonStart: { type: "STRING" }, hackathonEnd: { type: "STRING" },
+            sessionsStart: { type: "STRING" }, sessionsEnd: { type: "STRING" },
+            judgingStart: { type: "STRING" }, judgingEnd: { type: "STRING" },
+          }},
+          tracks: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } } },
+          prizes: { type: "ARRAY", items: { type: "OBJECT", properties: {
+            category: { type: "STRING" }, place: { type: "STRING" }, title: { type: "STRING" }, value: { type: "STRING" }, type: { type: "STRING" }
+          }}},
+          sponsors: { type: "ARRAY", items: { type: "OBJECT", properties: {
+            name: { type: "STRING" }, tier: { type: "STRING" }, website: { type: "STRING" }, description: { type: "STRING" }
+          }}},
+          faq: { type: "ARRAY", items: { type: "OBJECT", properties: { question: { type: "STRING" }, answer: { type: "STRING" } } } },
+        }
+      };
 
+      const payload = {
+        contents: [{ parts: [
+          { text: "حلل هذا الملف واستخرج معلومات الهاكاثون لتعبئة النموذج. إذا كانت بعض البيانات غير موجودة، اتركها فارغة." },
+          { inlineData: { mimeType, data: base64Data } },
+        ]}],
+        generationConfig: { responseMimeType: "application/json", responseSchema: schema },
+      };
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
+      );
+
+      if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
       const result = await res.json();
-      if (result.wizardData) {
-        const extracted = result.wizardData;
+      const extractedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (extractedText) {
+        const extracted = JSON.parse(extractedText);
         const merged = { ...INITIAL_DATA };
 
-        for (const key of ["title", "description", "targetAudience", "contactEmail", "rules", "format"]) {
+        for (const key of ["title", "description", "targetAudience", "contactEmail", "format"]) {
           if (extracted[key]) merged[key] = extracted[key];
         }
         if (extracted.location?.name) merged.location = extracted.location;
-        if (extracted.schedule) merged.schedule = { ...INITIAL_DATA.schedule, ...extracted.schedule };
-        if (extracted.settings) merged.settings = { ...INITIAL_DATA.settings, ...extracted.settings };
-        if (extracted.branding) merged.branding = { ...INITIAL_DATA.branding, ...extracted.branding };
-        if (extracted.hackathonStart) merged.hackathonStart = extracted.hackathonStart;
-        if (extracted.hackathonEnd) merged.hackathonEnd = extracted.hackathonEnd;
-        if (extracted.sessionsStart) merged.sessionsStart = extracted.sessionsStart;
-        if (extracted.sessionsEnd) merged.sessionsEnd = extracted.sessionsEnd;
-
-        for (const key of ["tracks", "prizes", "judgingCriteria", "sponsors", "faq"]) {
+        if (extracted.schedule) {
+          merged.schedule = { ...INITIAL_DATA.schedule };
+          for (const k of ["registrationOpen", "registrationClose", "judgingStart", "judgingEnd"]) {
+            if (extracted.schedule[k]) merged.schedule[k] = extracted.schedule[k];
+          }
+          if (extracted.schedule.hackathonStart) merged.hackathonStart = extracted.schedule.hackathonStart;
+          if (extracted.schedule.hackathonEnd) merged.hackathonEnd = extracted.schedule.hackathonEnd;
+          if (extracted.schedule.sessionsStart) merged.sessionsStart = extracted.schedule.sessionsStart;
+          if (extracted.schedule.sessionsEnd) merged.sessionsEnd = extracted.schedule.sessionsEnd;
+        }
+        for (const key of ["tracks", "prizes", "sponsors", "faq"]) {
           if (Array.isArray(extracted[key]) && extracted[key].length > 0) {
             merged[key] = extracted[key].map((item) => ({ ...item, id: crypto.randomUUID() }));
           }
         }
-
-        if (result.fileUrl) merged.sourceFileUrl = result.fileUrl;
         setData(merged);
       }
-
       setShowUpload(false);
     } catch (err) {
+      console.error("Gemini extraction error:", err);
       setUploadError(err.message);
     } finally {
       setUploading(false);

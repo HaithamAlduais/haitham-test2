@@ -140,8 +140,8 @@ export default function HackathonsPage() {
                   )}
                 </div>
 
-                {/* Actions for non-hackathon events */}
-                {!isHack && (
+                {/* Actions for all events */}
+                {(
                   <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border">
                     {!isEditing ? (
                       <>

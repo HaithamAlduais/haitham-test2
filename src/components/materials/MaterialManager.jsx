@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
-import { apiPatch, apiPost } from "../../utils/apiClient";
+import { apiPatch } from "../../utils/apiClient";
 import { useLanguage } from "@/context/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FileText, Link2, Upload, Trash2, Plus, ExternalLink } from "lucide-react";
+import { storage } from "@/firebase";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 /**
  * MaterialManager
@@ -71,27 +73,11 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
     setErrorMSG("");
 
     try {
-      const res = await apiPost("/api/upload/presigned-url", {
-        fileName: file.name,
-        contentType: file.type || "application/octet-stream",
-        fileType: entityType,
-        fileId: entityId,
-      });
-
-      const { uploadUrl, downloadURL, storagePath } = res;
-
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-          "Content-Disposition": `attachment; filename="${file.name}"`,
-        },
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("Failed to upload file to storage");
-      }
+      // Upload directly using Firebase Storage client SDK
+      const storagePath = `${entityType}/${entityId}/${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, file, { contentType: file.type || "application/octet-stream" });
+      const downloadURL = await getDownloadURL(storageRef);
 
       const newMaterial = {
         id: Date.now().toString(),
@@ -103,8 +89,8 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
 
       await saveMaterials([...materials, newMaterial]);
     } catch (err) {
-      console.error(err);
-      setErrorMSG(isAr ? "فشل رفع الملف." : "Failed to upload file. Please check storage permissions.");
+      console.error("Upload error:", err);
+      setErrorMSG(isAr ? "فشل رفع الملف. تحقق من الاتصال." : "Failed to upload file. Check your connection.");
     } finally {
       setLoading(false);
     }
@@ -141,7 +127,8 @@ const MaterialManager = ({ entityType, entityId, initialMaterials, canEdit, onUp
     try {
       if (mat.type === "file" && mat.storagePath) {
         try {
-          await apiPost("/api/upload/delete-file", { storagePath: mat.storagePath });
+          const storageRef = ref(storage, mat.storagePath);
+          await deleteObject(storageRef);
         } catch (storageErr) {
           console.warn("Could not delete from storage (maybe already deleted):", storageErr);
         }

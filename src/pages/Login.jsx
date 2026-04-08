@@ -44,6 +44,9 @@ const Login = () => {
   const navigate = useNavigate();
   const { t, dir } = useLanguage();
 
+  // Check for returnTo parameter (e.g., from registration page)
+  const returnTo = new URLSearchParams(location.search).get("returnTo");
+
   const flipTo = (target) => {
     setFlipping(true);
     setError("");
@@ -77,7 +80,7 @@ const Login = () => {
       }
       const userDocSnap = await getDoc(doc(db, "users", user.uid));
       const role = userDocSnap.exists() ? userDocSnap.data().role : null;
-      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
+      navigate(returnTo || (role === "Organizer" || role === "Provider" ? "/dashboard" : "/home"), { replace: true });
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code));
     } finally {
@@ -151,7 +154,7 @@ const Login = () => {
           createdAt: serverTimestamp(),
         });
       }
-      navigate("/dashboard");
+      navigate(returnTo || "/dashboard");
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code));
     } finally {
@@ -166,7 +169,7 @@ const Login = () => {
     if (userDocSnap.exists()) {
       // Existing user — go to dashboard
       const role = userDocSnap.data().role;
-      navigate(role === "Organizer" || role === "Provider" ? "/dashboard" : "/home", { replace: true });
+      navigate(returnTo || (role === "Organizer" || role === "Provider" ? "/dashboard" : "/home"), { replace: true });
     } else {
       // New user — ask for role
       setPendingOAuthUser(user);
@@ -186,7 +189,7 @@ const Login = () => {
         createdAt: serverTimestamp(),
       });
       setPendingOAuthUser(null);
-      navigate(selectedRole === "Organizer" ? "/dashboard" : "/home", { replace: true });
+      navigate(returnTo || (selectedRole === "Organizer" ? "/dashboard" : "/home"), { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

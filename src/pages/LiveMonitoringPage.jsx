@@ -309,7 +309,7 @@ const LiveMonitoringPage = () => {
                 entityType="sessions"
                 entityId={session.id || sessionId}
                 initialMaterials={session.materials || []}
-                canEdit={userRole === "Provider"}
+                canEdit={userRole === "Provider" || userRole === "Organizer"}
               />
 
               {/* ── Attendee List ── */}

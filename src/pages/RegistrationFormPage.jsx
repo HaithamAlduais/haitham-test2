@@ -25,7 +25,8 @@ export default function RegistrationFormPage() {
 
   useEffect(() => {
     if (!currentUser) {
-      navigate("/login");
+      // Pass current URL as return destination after login
+      navigate(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     const fetchUrl = eventId ? `/api/events/public/${eventId}` : `/api/hackathons/public/${slug}`;

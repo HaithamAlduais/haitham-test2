@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { apiPost } from "@/utils/apiClient";
 import { useLanguage } from "@/context/LanguageContext";
 import { auth } from "@/firebase";
+import GoogleMapPicker from "@/components/GoogleMapPicker";
 import {
   Upload,
   Sparkles,
@@ -424,7 +425,7 @@ export default function HackathonCreationWizard({ onClose }) {
           targetAudience: { type: "STRING" },
           contactEmail: { type: "STRING" },
           format: { type: "STRING", description: "online or in-person" },
-          location: { type: "OBJECT", properties: { name: { type: "STRING" }, address: { type: "STRING" } } },
+          location: { type: "OBJECT", properties: { name: { type: "STRING", description: "اسم المكان" }, address: { type: "STRING", description: "العنوان الكامل" }, lat: { type: "NUMBER", description: "خط العرض" }, lng: { type: "NUMBER", description: "خط الطول" } } },
           schedule: { type: "OBJECT", properties: {
             registrationOpen: { type: "STRING" }, registrationClose: { type: "STRING" },
             hackathonStart: { type: "STRING" }, hackathonEnd: { type: "STRING" },
@@ -699,17 +700,24 @@ export default function HackathonCreationWizard({ onClose }) {
               </div>
             </div>
 
-            {/* In-person location */}
+            {/* In-person location with Google Maps */}
             {(data.format || "online") === "in-person" && (
               <div className="space-y-4 rounded-base border-2 border-border bg-muted/30 p-4">
-                <div className="space-y-2">
-                  <Label>{t("locationNameLabel") || "\u0627\u0633\u0645 \u0627\u0644\u0645\u0643\u0627\u0646"}</Label>
-                  <Input value={location.name} onChange={(e) => updateLocation("name", e.target.value)} placeholder={t("locationNamePlaceholder")} />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>{t("locationNameLabel") || "اسم المكان"}</Label>
+                    <Input value={location.name} onChange={(e) => updateLocation("name", e.target.value)} placeholder={t("locationNamePlaceholder")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("locationAddressLabel") || "العنوان"}</Label>
+                    <Input value={location.address} onChange={(e) => updateLocation("address", e.target.value)} placeholder={t("locationAddressPlaceholder")} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>{t("locationAddressLabel") || "\u0627\u0644\u0639\u0646\u0648\u0627\u0646"}</Label>
-                  <Input value={location.address} onChange={(e) => updateLocation("address", e.target.value)} placeholder={t("locationAddressPlaceholder")} />
-                </div>
+                <GoogleMapPicker
+                  location={location}
+                  onLocationChange={(loc) => updateData({ location: loc })}
+                  placeholder={t("searchLocation") || "ابحث عن الموقع..."}
+                />
               </div>
             )}
 

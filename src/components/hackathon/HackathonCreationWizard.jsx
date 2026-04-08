@@ -323,8 +323,7 @@ export default function HackathonCreationWizard({ onClose }) {
   const [error, setError] = useState(null);
 
   // ── AI page generator overlay ──────────────────────────────────────────────
-  const [showPageGen, setShowPageGen] = useState(false);
-  const [savedHackathon, setSavedHackathon] = useState(null); // { id, slug }
+  // Page auto-generated on publish (editor in منشئ الصفحات)
 
   // ── Inline add-form state ──────────────────────────────────────────────────
   const [newTrack, setNewTrack] = useState({ name: "", description: "" });
@@ -531,31 +530,25 @@ export default function HackathonCreationWizard({ onClose }) {
     }
   };
 
-  const handleGeneratePage = async () => {
+  const handlePublish = async () => {
     if (!data.title.trim()) {
-      setError(t("titleRequired") || "\u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0645\u0637\u0644\u0648\u0628");
+      setError(t("titleRequired") || "العنوان مطلوب");
       return;
     }
     const result = await saveHackathon(true);
     if (result) {
-      setSavedHackathon(result);
-      setShowPageGen(true);
+      // Auto-generate landing page in background (non-blocking)
+      apiPost("/api/ai/generate-landing-page", { wizardData: data }).then((pageResult) => {
+        if (pageResult?.html) {
+          apiPost(`/api/hackathons/${result.id}`, { customPageHtml: pageResult.html, hasCustomPage: true }).catch(() => {});
+        }
+      }).catch(() => {});
+
+      // Navigate to management page immediately
+      navigate(`/hackathons/${result.id}`);
+      onClose?.();
     }
   };
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // RENDER: AI Page Generator overlay
-  // ══════════════════════════════════════════════════════════════════════════
-  if (showPageGen && savedHackathon) {
-    return (
-      <AIPageGenerator
-        data={data}
-        hackathonId={savedHackathon.id}
-        hackathonSlug={savedHackathon.slug}
-        onClose={() => navigate(`/hackathons/${savedHackathon.slug || savedHackathon.id}`)}
-      />
-    );
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER: File upload pre-step
@@ -1056,9 +1049,9 @@ export default function HackathonCreationWizard({ onClose }) {
               <Save className="h-4 w-4" />
               {submitting ? "..." : (t("saveDraft") || "\u062d\u0641\u0638 \u0643\u0645\u0633\u0648\u062f\u0629")}
             </Button>
-            <Button size="lg" onClick={handleGeneratePage} disabled={submitting} className="gap-2">
+            <Button size="lg" onClick={handlePublish} disabled={submitting} className="gap-2">
               <Sparkles className="h-4 w-4" />
-              {submitting ? "..." : (t("generatePageBtn") || "\u2728 \u0623\u0646\u0634\u0626 \u0635\u0641\u062d\u0629 \u0627\u0644\u0647\u0627\u0643\u0627\u062b\u0648\u0646")}
+              {submitting ? "..." : (t("publishBtn") || "نشر الهاكاثون")}
             </Button>
           </div>
         </div>

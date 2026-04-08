@@ -390,6 +390,11 @@ export default function HackathonCreationWizard({ onClose }) {
     setNewSponsor({ ...EMPTY_SPONSOR });
   };
   const removeSponsor = (idx) => updateData({ sponsors: sponsors.filter((_, i) => i !== idx) });
+  const updateSponsor = (idx, field, value) => {
+    const updated = [...sponsors];
+    updated[idx] = { ...updated[idx], [field]: value };
+    updateData({ sponsors: updated });
+  };
 
   // ── File upload → Gemini direct extraction → auto-fill form ────────────────
   const fileToBase64 = (file) => new Promise((resolve, reject) => {
@@ -933,24 +938,43 @@ export default function HackathonCreationWizard({ onClose }) {
             {sponsors.length > 0 && (
               <div className="space-y-3">
                 {sponsors.map((sponsor, idx) => (
-                  <div key={sponsor.id || idx} className="flex items-start gap-3 rounded-base border-2 border-border bg-muted/30 p-4">
-                    {sponsor.logoUrl ? (
-                      <img src={sponsor.logoUrl} alt={sponsor.name} className="h-10 w-10 shrink-0 rounded-base border-2 border-border object-contain" />
-                    ) : (
-                      <Building2 className="h-5 w-5 shrink-0 text-main mt-0.5" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-foreground">{sponsor.name}</p>
-                        <span className={`inline-block rounded-base px-2 py-0.5 text-xs font-bold ${TIER_COLORS[sponsor.tier] || ""}`}>
-                          {TIER_LABELS[sponsor.tier] || sponsor.tier}
-                        </span>
-                      </div>
-                      {sponsor.websiteUrl && <p className="text-sm text-main font-bold truncate">{sponsor.websiteUrl}</p>}
+                  <div key={sponsor.id || idx} className="rounded-base border-2 border-border bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-foreground">{sponsor.name || t("sponsorName") || "راعي جديد"}</span>
+                      <button onClick={() => removeSponsor(idx)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                    <button onClick={() => removeSponsor(idx)} className="shrink-0 text-muted-foreground hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">{t("sponsorName") || "اسم الراعي"}</Label>
+                        <Input value={sponsor.name || ""} onChange={(e) => updateSponsor(idx, "name", e.target.value)} placeholder="مثال: STC" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{t("sponsorTier") || "المستوى"}</Label>
+                        <select value={sponsor.tier || "gold"} onChange={(e) => updateSponsor(idx, "tier", e.target.value)}
+                          className="flex h-10 w-full rounded-base border-2 border-border bg-background px-3 py-2 text-sm">
+                          <option value="strategic">شريك استراتيجي</option>
+                          <option value="platinum">بلاتيني</option>
+                          <option value="gold">ذهبي</option>
+                          <option value="silver">فضي</option>
+                          <option value="bronze">برونزي</option>
+                          <option value="tech">راعي تقني</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{t("sponsorWebsite") || "الموقع"}</Label>
+                        <Input value={sponsor.website || sponsor.websiteUrl || ""} onChange={(e) => updateSponsor(idx, "website", e.target.value)} placeholder="https://example.com" dir="ltr" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{t("sponsorLogo") || "رابط الشعار"}</Label>
+                        <Input value={sponsor.logoUrl || ""} onChange={(e) => updateSponsor(idx, "logoUrl", e.target.value)} placeholder="https://example.com/logo.png" dir="ltr" />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label className="text-xs">{t("description") || "الوصف"}</Label>
+                        <Input value={sponsor.description || ""} onChange={(e) => updateSponsor(idx, "description", e.target.value)} placeholder="نبذة عن الراعي..." />
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

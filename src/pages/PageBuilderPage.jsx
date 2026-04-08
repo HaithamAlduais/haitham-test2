@@ -130,14 +130,66 @@ export default function PageBuilderPage() {
     if (activeFile === filename) setActiveFile("index.html");
   };
 
-  // ── Generate page with Gemini ──────────────────────────────────────────
+  // ── Direct Gemini call (no backend — avoids 502 timeout) ────────────────
+  const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
+
+  const callGemini = async (prompt) => {
+    const res = await fetch(GEMINI_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 30000 },
+      }),
+    });
+    if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
+    const data = await res.json();
+    let html = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    html = html.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
+    return html;
+  };
+
+  // ── Generate page ──────────────────────────────────────────────────────
   const handleGenerate = async () => {
     setGenerating(true);
     setError(null);
     try {
-      const result = await apiPost("/api/ai/generate-landing-page", { wizardData: hackathon });
-      if (result.html) {
-        setFiles(prev => ({ ...prev, "index.html": { language: "html", value: result.html } }));
+      const h = hackathon || {};
+      const prompt = `Create a stunning, complete, single-page HTML landing page for this hackathon.
+
+IMPORTANT: Include these CDN libraries in the <head>:
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
+HACKATHON DATA:
+Title: ${h.title || "Hackathon"}
+Description: ${h.description || ""}
+Target Audience: ${h.targetAudience || ""}
+Format: ${h.format || "online"}
+Contact: ${h.contactEmail || ""}
+Tracks: ${(h.tracks || []).map(t => t.name + ": " + (t.description || "")).join("; ") || "None"}
+Prizes: ${(h.prizes || []).map(p => (p.place || "") + " " + (p.title || "") + ": " + (p.value || "")).join("; ") || "None"}
+Schedule: Reg: ${h.schedule?.registrationOpen || "TBD"} - ${h.schedule?.registrationClose || "TBD"}
+Hackathon: ${h.hackathonStart || "TBD"} - ${h.hackathonEnd || "TBD"}
+Sponsors: ${(h.sponsors || []).map(s => s.name + " (" + (s.tier || "") + ")").join(", ") || "None"}
+FAQ: ${(h.faq || []).map(f => "Q: " + f.question + " A: " + f.answer).join("; ") || "None"}
+Primary Color: ${h.branding?.primaryColor || "#7C3AED"}
+
+REQUIREMENTS:
+- Use Tailwind CSS (via CDN already included)
+- Use Tajawal font for Arabic text
+- dir="rtl" for Arabic content
+- Sections: Hero, About, Tracks, Prizes, Schedule, Sponsors, FAQ, Register CTA, Footer
+- Beautiful gradients, animations, modern design
+- Fully responsive
+- Smooth scroll navigation
+- Include countdown timer with JavaScript
+- Return ONLY raw HTML starting with <!DOCTYPE html>`;
+
+      const html = await callGemini(prompt);
+      if (html) {
+        setFiles(prev => ({ ...prev, "index.html": { language: "html", value: html } }));
         setActiveFile("index.html");
         setChatHistory(prev => [...prev, { role: "ai", text: "تم إنشاء الصفحة بنجاح ✨" }]);
       }
@@ -159,12 +211,18 @@ export default function PageBuilderPage() {
     setError(null);
     try {
       const currentHtml = files["index.html"]?.value || "";
-      const result = await apiPost("/api/ai/improve-landing-page", {
-        currentHtml,
-        instruction: userMsg,
-      });
-      if (result.html) {
-        setFiles(prev => ({ ...prev, "index.html": { language: "html", value: result.html } }));
+      const prompt = `Modify this HTML page based on the instruction. Keep all existing content and structure. Return ONLY the complete modified HTML.
+
+CURRENT HTML (first 20000 chars):
+${currentHtml.substring(0, 20000)}
+
+INSTRUCTION: ${userMsg}
+
+Return ONLY raw HTML starting with <!DOCTYPE html>.`;
+
+      const html = await callGemini(prompt);
+      if (html) {
+        setFiles(prev => ({ ...prev, "index.html": { language: "html", value: html } }));
         setChatHistory(prev => [...prev, { role: "ai", text: "تم تطبيق التعديلات ✅" }]);
       }
     } catch (err) {
